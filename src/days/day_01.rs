@@ -5,7 +5,7 @@ pub struct Day1;
 impl Day for Day1 {
     fn part_1(&self, input: &str) -> String {
         input
-            .split("\r\n\r\n")
+            .split("\n\n")
             .map(|elf| {
                 elf.lines()
                     .map(|food| food.parse::<u32>().unwrap())
@@ -18,7 +18,7 @@ impl Day for Day1 {
 
     fn part_2(&self, input: &str) -> String {
         let mut elves = input
-            .split("\r\n\r\n")
+            .split("\n\n")
             .map(|elf| {
                 elf.lines()
                     .map(|food| food.parse::<u32>().unwrap())
