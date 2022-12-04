@@ -1,8 +1,8 @@
 use super::Day;
 
-pub struct Day4;
+pub struct Day04;
 
-impl Day for Day4 {
+impl Day for Day04 {
     fn part_1(&self, input: &str) -> String {
         input
             .lines()

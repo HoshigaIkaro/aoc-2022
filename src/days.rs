@@ -1,13 +1,12 @@
-mod day_1;
-mod day_2;
-mod day_3;
-mod day_4;
+mod day_01;
+mod day_02;
+mod day_03;
+mod day_04;
 
-pub use day_1::Day1;
-pub use day_2::Day2;
-pub use day_3::Day3;
-pub use day_4::Day4;
-
+pub use day_01::Day01;
+pub use day_02::Day02;
+pub use day_03::Day03;
+pub use day_04::Day04;
 
 pub trait Day {
     fn part_1(&self, input: &str) -> String;
