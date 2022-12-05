@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use super::Day;
 
 pub struct Day05;
@@ -11,11 +9,11 @@ impl Day for Day05 {
         for line in instructions.lines() {
             let (num, origin, target) = parse_instruction(line);
             for _ in 0..num {
-                let v = cmap.get_mut(origin - 1).unwrap().pop_back().unwrap();
-                cmap.get_mut(target - 1).unwrap().push_back(v);
+                let v = cmap.get_mut(origin - 1).unwrap().pop().unwrap();
+                cmap.get_mut(target - 1).unwrap().push(v);
             }
         }
-        cmap.iter().map(|v| v.back().unwrap()).collect()
+        cmap.iter().map(|v| v.last().unwrap()).collect()
     }
 
     fn part_2(&self, input: &str) -> String {
@@ -25,18 +23,18 @@ impl Day for Day05 {
             let (num, origin, target) = parse_instruction(line);
             let mut v = Vec::new();
             for _ in 0..num {
-                v.push(cmap.get_mut(origin - 1).unwrap().pop_back().unwrap());
+                v.push(cmap.get_mut(origin - 1).unwrap().pop().unwrap());
             }
             cmap.get_mut(target - 1)
                 .unwrap()
                 .extend(v.into_iter().rev());
         }
-        cmap.iter().map(|v| v.back().unwrap()).collect()
+        cmap.iter().map(|v| v.last().unwrap()).collect()
     }
 }
 
-fn get_crates(input: &str) -> Vec<VecDeque<char>> {
-    let mut cmap: Vec<VecDeque<char>> = vec![VecDeque::new(); 9];
+fn get_crates(input: &str) -> Vec<Vec<char>> {
+    let mut cmap: Vec<Vec<char>> = vec![Vec::new(); 9];
     for line in input.lines() {
         if line.contains('1') {
             break;
@@ -46,7 +44,7 @@ fn get_crates(input: &str) -> Vec<VecDeque<char>> {
         let line = line.replace("    ", "   @");
         for (i, c) in line.split('@').enumerate() {
             if c.chars().any(|c| c.is_alphabetic()) {
-                cmap[i].push_front(c.chars().nth(1).unwrap());
+                cmap[i].insert(0, c.chars().nth(1).unwrap());
             }
         }
     }
