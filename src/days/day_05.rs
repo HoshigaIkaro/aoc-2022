@@ -43,7 +43,7 @@ fn get_crates(input: &str) -> Vec<Vec<char>> {
         let line = line.replace("] ", "]@");
         let line = line.replace("    ", "   @");
         for (i, c) in line.split('@').enumerate() {
-            if c.chars().any(|c| c.is_alphabetic()) {
+            if c.starts_with('[') {
                 cmap[i].insert(0, c.chars().nth(1).unwrap());
             }
         }
