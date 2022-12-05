@@ -33,17 +33,13 @@ impl Day for Day05 {
 }
 
 fn get_crates(input: &str) -> Vec<Vec<char>> {
-    let mut cmap: Vec<Vec<char>> = vec![Vec::new(); 9];
-    for line in input.lines() {
-        if line.contains('1') {
-            break;
-        }
-        let line = line.replace(" [", "@[");
-        let line = line.replace("] ", "]@");
-        let line = line.replace("    ", "   @");
-        for (i, c) in line.split('@').enumerate() {
-            if c.starts_with('[') {
-                cmap[i].insert(0, c.chars().nth(1).unwrap());
+    let (left, right) = input.rsplit_once('\n').unwrap();
+    let num_crates = right.split_whitespace().last().unwrap().parse().unwrap();
+    let mut cmap: Vec<Vec<char>> = vec![Vec::new(); num_crates];
+    for line in left.lines() {
+        for (i, c) in line.chars().skip(1).step_by(4).enumerate() {
+            if c != ' ' {
+                cmap[i].insert(0, c);
             }
         }
     }
