@@ -21,12 +21,9 @@ impl Day for Day05 {
         let mut cmap = get_crates(crates);
         for line in instructions.lines() {
             let (num, origin, target) = parse_instruction(line);
-            let v: Vec<char> = (0..num)
-                .map(|_| cmap.get_mut(origin - 1).unwrap().pop().unwrap())
-                .collect();
-            cmap.get_mut(target - 1)
-                .unwrap()
-                .extend(v.into_iter().rev());
+            let v = cmap.get_mut(origin - 1).unwrap();
+            let b = v.split_off(v.len() - num);
+            cmap.get_mut(target - 1).unwrap().extend(b.into_iter());
         }
         cmap.iter().map(|v| v.last().unwrap()).collect()
     }
