@@ -1,3 +1,3 @@
 fn main() {
-    aoc::run_day(5);
+    aoc::run_day(6);
 }

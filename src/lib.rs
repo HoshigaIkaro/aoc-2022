@@ -11,6 +11,7 @@ pub fn run_day(day: u8) {
         3 => Box::new(days::Day03),
         4 => Box::new(days::Day04),
         5 => Box::new(days::Day05),
+        6 => Box::new(days::Day06),
         _ => unreachable!(),
     };
 
