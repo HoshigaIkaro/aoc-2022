@@ -25,7 +25,6 @@ impl Day for Day07 {
                 let dir = line.trim_start_matches("dir ");
                 dirs.entry(dir_stack.last().unwrap()).or_default().push(dir);
                 dirs.insert(dir, Vec::new());
-                files.insert(dir, Vec::new());
             } else {
                 files
                     .entry(dir_stack.last().unwrap())
@@ -52,7 +51,7 @@ impl Day for Day07 {
 }
 
 fn size(dir: &str, dirs: &HashMap<&str, Vec<&str>>, files: &HashMap<&str, Vec<usize>>) -> usize {
-    files.get(dir).unwrap().iter().sum::<usize>()
+    files.get(dir).map(|v| v.iter().sum::<usize>()).unwrap_or(0)
         + dirs
             .get(dir)
             .unwrap()
