@@ -42,5 +42,5 @@ bench_day!(05);
 bench_day!(06);
 bench_day!(07);
 
-criterion_group!(complete, day_01, day_02, day_03, day_04, day_05, day_06);
+criterion_group!(complete, day_01, day_02, day_03, day_04, day_05, day_06, day_07);
 criterion_main!(complete);
