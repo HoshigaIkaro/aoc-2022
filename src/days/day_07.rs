@@ -12,15 +12,17 @@ pub struct Day07;
 impl Day for Day07 {
     fn part_1(&self, input: &str) -> String {
         let (_root, dirs, files) = parse(input);
-        let mut sum = 0;
-        for con in dirs.keys() {
-            let size = size(*con, &dirs, &files);
-            if size <= 100_000 {
-                sum += size;
-            }
-        }
-
-        sum.to_string()
+        dirs.keys()
+            .filter_map(|con| {
+                let size = size(*con, &dirs, &files);
+                if size <= 100_000 {
+                    Some(size)
+                } else {
+                    None
+                }
+            })
+            .sum::<u64>()
+            .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
