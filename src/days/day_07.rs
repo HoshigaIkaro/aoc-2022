@@ -1,7 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::iter;
 
 use super::Day;
 
@@ -65,7 +64,7 @@ fn parse(input: &str) -> (u64, Dirs, Files) {
                     dir_stack.hash(&mut hasher);
                     context = hasher.finish();
                 }
-                _ => unimplemented!(),
+                _ => unreachable!(),
             },
             // ls output
             item => match item {
