@@ -31,3 +31,14 @@ fn find<const W: usize>(input: &str) -> String {
         .add(W)
         .to_string()
 }
+
+fn find_optimized<const W: usize>(input: &str) -> String {
+    let mut chars = input.chars();
+    let mut window: [char; W] = chars
+        .by_ref()
+        .take(W)
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap();
+    todo!()
+}
