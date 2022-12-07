@@ -92,10 +92,7 @@ fn parse(input: &str) -> (u64, Dirs, Files) {
 }
 
 fn size(context: u64, dirs: &Dirs, files: &Files) -> u64 {
-    files
-        .get(&context)
-        .map(|v| v.iter().sum::<u64>())
-        .unwrap_or(0)
+    files.get(&context).map_or(0, |v| v.iter().sum::<u64>())
         + dirs
             .get(&context)
             .unwrap()
