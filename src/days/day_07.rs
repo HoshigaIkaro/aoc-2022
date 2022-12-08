@@ -11,7 +11,7 @@ pub struct Day07;
 
 impl Day for Day07 {
     fn part_1(&self, input: &str) -> String {
-        let (_root, dirs, files) = parse(input);
+        let (dirs, files) = parse(input);
         dirs.keys()
             .filter_map(|con| {
                 let size = size(*con, &dirs, &files);
@@ -26,8 +26,9 @@ impl Day for Day07 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let (root, dirs, files) = parse(input);
-        let remaining = 30_000_000 - (70_000_000 - size(root, &dirs, &files));
+        let (dirs, files) = parse(input);
+        let total_size: u64 = files.values().flatten().sum();
+        let remaining = 30_000_000 - (70_000_000 - total_size);
         dirs.keys()
             .filter_map(|con| {
                 let size = size(*con, &dirs, &files);
@@ -43,7 +44,7 @@ impl Day for Day07 {
     }
 }
 
-fn parse(input: &str) -> (u64, Dirs, Files) {
+fn parse(input: &str) -> (Dirs, Files) {
     let mut dirs: Dirs = HashMap::new();
     let mut files: Files = HashMap::new();
     let mut dir_stack: Vec<&str> = vec!["/"];
@@ -87,10 +88,7 @@ fn parse(input: &str) -> (u64, Dirs, Files) {
             },
         }
     }
-    let mut hasher = DefaultHasher::new();
-    vec!["/"].hash(&mut hasher);
-    let root = hasher.finish();
-    (root, dirs, files)
+    (dirs, files)
 }
 
 fn size(context: u64, dirs: &Dirs, files: &Files) -> u64 {
