@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use super::Day;
 
 pub struct Day08;
@@ -7,20 +9,21 @@ impl Day for Day08 {
         let grid: Vec<Vec<usize>> = parse(input);
         let rows = grid.len();
         let cols = grid[0].len();
-        let mut visible = 2 * (rows + cols) - 4;
-        for row in 1..rows - 1 {
-            for col in 1..cols - 1 {
-                let height = grid[row][col];
-                if (0..col).all(|i| grid[row][i] < height)
-                    || (col + 1..cols).all(|i| grid[row][i] < height)
-                    || (0..row).all(|r| grid[r][col] < height)
-                    || (row + 1..rows).all(|r| grid[r][col] < height)
-                {
-                    visible += 1;
-                }
-            }
-        }
-        visible.to_string()
+        (1..rows - 1)
+            .map(|row| {
+                (1..cols - 1)
+                    .filter(|&col| {
+                        let height = grid[row][col];
+                        (0..col).all(|i| grid[row][i] < height)
+                            || (col + 1..cols).all(|i| grid[row][i] < height)
+                            || (0..row).all(|r| grid[r][col] < height)
+                            || (row + 1..rows).all(|r| grid[r][col] < height)
+                    })
+                    .count()
+            })
+            .sum::<usize>()
+            .add(2 * (rows + cols) - 4) // edges without overlaps
+            .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
