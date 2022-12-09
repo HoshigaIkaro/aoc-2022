@@ -1,3 +1,4 @@
+
 fn main() {
-    aoc::run_day(8);
+    aoc::run_day(9);
 }
