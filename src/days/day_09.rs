@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashSet, BTreeMap},
     iter,
 };
 
@@ -14,52 +14,32 @@ impl Day for Day09 {
         let mut tail: (isize, isize) = (0, 0);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
+            let times = times.parse::<isize>().unwrap();
             match dir {
                 "R" => {
-                    for _ in 0..times.parse().unwrap() {
-                        head.0 += 1;
-
-                        if move_knot(&head, &mut tail) {
-                            positions.insert(tail);
-                        }
-                    }
+                    head.0 += times;
                 }
                 "L" => {
-                    for _ in 0..times.parse().unwrap() {
-                        head.0 -= 1;
-
-                        if move_knot(&head, &mut tail) {
-                            positions.insert(tail);
-                        }
-                    }
+                    head.0 -= times;
                 }
                 "U" => {
-                    for _ in 0..times.parse().unwrap() {
-                        head.1 += 1;
-
-                        if move_knot(&head, &mut tail) {
-                            positions.insert(tail);
-                        }
-                    }
+                    head.1 += times;
                 }
                 "D" => {
-                    for _ in 0..times.parse().unwrap() {
-                        head.1 -= 1;
-
-                        if move_knot(&head, &mut tail) {
-                            positions.insert(tail);
-                        }
-                    }
+                    head.1 -= times;
                 }
-                _ => (),
+                _ => unreachable!(),
             };
+            while move_knot(&head, &mut tail) {
+                positions.insert(tail);
+            }
         }
         positions.len().to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut knots: HashMap<usize, (isize, isize)> =
-            HashMap::from_iter((0..=9).zip(iter::repeat((0, 0))));
+        let mut knots: BTreeMap<usize, (isize, isize)> =
+            BTreeMap::from_iter((0..=9).zip(iter::repeat((0, 0))));
         let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
@@ -130,17 +110,15 @@ fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
     }
 }
 
-fn update_knots(knots: &mut HashMap<usize, (isize, isize)>) -> bool {
+fn update_knots(knots: &mut BTreeMap<usize, (isize, isize)>) -> bool {
+    let mut moved = false;
     for n in 1..=9 {
         let head = knots.get(&(n - 1)).unwrap();
-        let mut tail = knots.get(&n).unwrap().clone();
-        let moved = move_knot(head, &mut tail);
+        let mut tail = *knots.get(&n).unwrap();
+        moved = move_knot(head, &mut tail);
         if moved {
             knots.insert(n, tail);
         }
-        if n == 9 {
-            return moved;
-        }
     }
-    false
+    moved
 }
