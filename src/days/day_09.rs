@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet, BTreeMap},
+    collections::{BTreeMap, HashSet},
     iter,
 };
 
@@ -38,7 +38,8 @@ impl Day for Day09 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut knots: BTreeMap<usize, (isize, isize)> = (0..=9).zip(iter::repeat((0, 0))).collect();
+        let mut knots: BTreeMap<usize, (isize, isize)> =
+            (0..=9).zip(iter::repeat((0, 0))).collect();
         let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
@@ -94,18 +95,25 @@ fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
     let v_d = head.1 - tail.1;
     let h_d = head.0 - tail.0;
 
-    if h_d.abs() > 1 || v_d.abs() > 1 {
-        tail.0 += h_d.signum();
-        tail.1 += v_d.signum();
-        true
-    } else if h_d.abs() > 1 {
-        tail.0 += h_d.signum();
-        true
-    } else if v_d.abs() > 1 {
-        tail.1 += v_d.signum();
-        true
-    } else {
-        false
+    match (h_d.abs() > 1, v_d.abs() > 1) {
+        // not touching, not in row or column
+        (true, true) => {
+            tail.0 += h_d.signum();
+            tail.1 += v_d.signum();
+            true
+        }
+        // not touching, not in row
+        (true, false) => {
+            tail.0 += h_d.signum();
+            true
+        }
+        // not touching, not in column
+        (false, true) => {
+            tail.1 += v_d.signum();
+            true
+        }
+        // touching
+        (false, false) => false,
     }
 }
 
