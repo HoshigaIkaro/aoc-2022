@@ -38,49 +38,48 @@ impl Day for Day09 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut knots: BTreeMap<usize, (isize, isize)> =
-            (0..=9).zip(iter::repeat((0, 0))).collect();
+        let mut knots = [(0, 0); 10];
         let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
             match dir {
                 "R" => {
                     for _ in 0..times.parse().unwrap() {
-                        let head = knots.get_mut(&0).unwrap();
+                        let head = &mut knots[0];
                         head.0 += 1;
 
                         if update_knots(&mut knots) {
-                            positions.insert(knots[&9]);
+                            positions.insert(knots[9]);
                         }
                     }
                 }
                 "L" => {
                     for _ in 0..times.parse().unwrap() {
-                        let head = knots.get_mut(&0).unwrap();
+                        let head = &mut knots[0];
                         head.0 -= 1;
 
                         if update_knots(&mut knots) {
-                            positions.insert(knots[&9]);
+                            positions.insert(knots[9]);
                         }
                     }
                 }
                 "U" => {
                     for _ in 0..times.parse().unwrap() {
-                        let head = knots.get_mut(&0).unwrap();
+                        let head = &mut knots[0];
                         head.1 += 1;
 
                         if update_knots(&mut knots) {
-                            positions.insert(knots[&9]);
+                            positions.insert(knots[9]);
                         }
                     }
                 }
                 "D" => {
                     for _ in 0..times.parse().unwrap() {
-                        let head = knots.get_mut(&0).unwrap();
+                        let head = &mut knots[0];
                         head.1 -= 1;
 
                         if update_knots(&mut knots) {
-                            positions.insert(knots[&9]);
+                            positions.insert(knots[9]);
                         }
                     }
                 }
@@ -117,14 +116,14 @@ fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
     }
 }
 
-fn update_knots(knots: &mut BTreeMap<usize, (isize, isize)>) -> bool {
+fn update_knots(knots: &mut [(isize, isize); 10]) -> bool {
     let mut moved = false;
     for n in 1..=9 {
-        let head = knots.get(&(n - 1)).unwrap();
-        let mut tail = *knots.get(&n).unwrap();
-        moved = move_knot(head, &mut tail);
+        let head = knots[n - 1];
+        let mut tail = knots[n];
+        moved = move_knot(&head, &mut tail);
         if moved {
-            knots.insert(n, tail);
+            knots[n] = tail;
         }
     }
     moved
