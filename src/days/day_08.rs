@@ -39,24 +39,20 @@ impl Day for Day08 {
                             .enumerate()
                             .rev()
                             .find(|(_, c)| grid[row][*c] >= height)
-                            .map(|(index, _)| col - index)
-                            .unwrap_or(col);
+                            .map_or(col, |(index, _)| col - index);
                         let up = (0..row)
                             .enumerate()
                             .rev()
                             .find(|(_, r)| grid[*r][col] >= height)
-                            .map(|(index, _)| row - index)
-                            .unwrap_or(row);
+                            .map_or(row, |(index, _)| row - index);
                         let right = (col + 1..cols)
                             .enumerate()
                             .find(|(_, c)| grid[row][*c] >= height)
-                            .map(|(index, _)| index + 1)
-                            .unwrap_or(cols - col - 1);
+                            .map_or(cols - col - 1, |(index, _)| index + 1);
                         let down = (row + 1..rows)
                             .enumerate()
                             .find(|(_i, r)| grid[*r][col] >= height)
-                            .map(|(index, _)| index + 1)
-                            .unwrap_or(rows - row - 1);
+                            .map_or(rows - row - 1, |(index, _)| index + 1);
                         left * up * right * down
                     })
                     .max()

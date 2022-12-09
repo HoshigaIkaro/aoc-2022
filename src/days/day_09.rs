@@ -38,8 +38,7 @@ impl Day for Day09 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut knots: BTreeMap<usize, (isize, isize)> =
-            BTreeMap::from_iter((0..=9).zip(iter::repeat((0, 0))));
+        let mut knots: BTreeMap<usize, (isize, isize)> = (0..=9).zip(iter::repeat((0, 0))).collect();
         let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
