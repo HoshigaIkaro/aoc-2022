@@ -14,21 +14,21 @@ impl Day for Day10 {
         let mut x = 1;
         let mut ops = parse_to_iter(input);
         let mut out: isize = 0;
-        let mut counter = 0;
+        let mut waiting_on_add = false;
         let mut buf = None;
         loop {
-            if counter > 0 {
-                counter -= 1;
+            if waiting_on_add {
+                waiting_on_add = false;
             } else if let Some(v) = buf {
                 x += v;
                 buf = None;
-                counter = 0;
+                waiting_on_add = false;
                 match ops.next() {
                     Some(op) => match op {
                         Op::Noop => (),
                         Op::Add(v) => {
                             buf = Some(v);
-                            counter = 1;
+                            waiting_on_add = true;
                         }
                     },
                     None => break,
@@ -39,7 +39,7 @@ impl Day for Day10 {
                         Op::Noop => (),
                         Op::Add(v) => {
                             buf = Some(v);
-                            counter = 1;
+                            waiting_on_add = true;
                         }
                     },
                     None => break,
@@ -57,23 +57,23 @@ impl Day for Day10 {
     fn part_2(&self, input: &str) -> String {
         let mut x = 1;
         let mut ops = parse_to_iter(input);
-        let mut counter = 0;
+        let mut waiting_on_add = false;
         let mut buf = None;
         let mut out = String::new();
         for _ in 0..6 {
             for cycle in 0..40 {
-                if counter > 0 {
-                    counter -= 1;
+                if waiting_on_add {
+                    waiting_on_add = false;
                 } else if let Some(v) = buf {
                     x += v;
                     buf = None;
-                    counter = 0;
+                    waiting_on_add = false;
                     match ops.next() {
                         Some(op) => match op {
                             Op::Noop => (),
                             Op::Add(v) => {
                                 buf = Some(v);
-                                counter = 1;
+                                waiting_on_add = true;
                             }
                         },
                         None => break,
@@ -84,7 +84,7 @@ impl Day for Day10 {
                             Op::Noop => (),
                             Op::Add(v) => {
                                 buf = Some(v);
-                                counter = 1;
+                                waiting_on_add = true;
                             }
                         },
                         None => break,
