@@ -20,7 +20,6 @@ impl Day for Day10 {
         let mut counter = 0;
         let mut buf = None;
         loop {
-            // println!("B | {} {} {} {counter}", cycle, x, cycle * x);
             if counter > 0 {
                 counter -= 1;
             } else if let Some(v) = buf {
@@ -49,14 +48,12 @@ impl Day for Day10 {
                     None => break,
                 }
             }
-            // println!("A | {} {} {} {counter}\n", cycle, x, cycle * x);
             cycle += 1;
 
             if (cycle - 20) % 40 == 0 {
                 out += cycle as isize * x;
             }
         }
-        println!("{} {} {}", cycle, x, cycle * x);
         out.to_string()
     }
 
@@ -70,7 +67,6 @@ impl Day for Day10 {
         let mut buf = None;
         for _ in 0..6 {
             for cycle in 0..40 {
-                // println!("B | {} {} {} {counter}", cycle, x, cycle * x);
                 if counter > 0 {
                     counter -= 1;
                 } else if let Some(v) = buf {
@@ -99,8 +95,7 @@ impl Day for Day10 {
                         None => break,
                     }
                 }
-                // println!("A | {} {} {} {counter}\n", cycle, x, cycle * x);
-
+                
                 if x.abs_diff(cycle) <= 1 {
                     print!("#")
                 } else {
