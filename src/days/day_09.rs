@@ -2,11 +2,15 @@ use std::collections::HashSet;
 
 use super::Day;
 
+/// Position
+type Position = (isize, isize);
+type Positions = HashSet<Position>;
+
 pub struct Day09;
 
 impl Day for Day09 {
     fn part_1(&self, input: &str) -> String {
-        let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
+        let mut positions: Positions = HashSet::from_iter(vec![(0, 0)]);
         let mut knots = [(0, 0); 2];
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
@@ -36,7 +40,7 @@ impl Day for Day09 {
 
     fn part_2(&self, input: &str) -> String {
         let mut knots = [(0, 0); 10];
-        let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
+        let mut positions: Positions = HashSet::from_iter(vec![(0, 0)]);
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
             match dir {
@@ -87,7 +91,7 @@ impl Day for Day09 {
     }
 }
 
-fn move_knot(head: (isize, isize), tail: &mut (isize, isize)) -> bool {
+fn move_knot(head: Position, tail: &mut Position) -> bool {
     let v_d = head.1 - tail.1;
     let h_d = head.0 - tail.0;
 
@@ -100,7 +104,7 @@ fn move_knot(head: (isize, isize), tail: &mut (isize, isize)) -> bool {
     }
 }
 
-fn update_knots<const K: usize>(knots: &mut [(isize, isize); K]) -> bool {
+fn update_knots<const K: usize>(knots: &mut [Position; K]) -> bool {
     let mut moved = false;
     for n in 1..K {
         let head = knots[n - 1];
