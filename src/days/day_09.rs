@@ -7,11 +7,11 @@ pub struct Day09;
 impl Day for Day09 {
     fn part_1(&self, input: &str) -> String {
         let mut positions: HashSet<(isize, isize)> = HashSet::from_iter(vec![(0, 0)]);
-        let mut head: (isize, isize) = (0, 0);
-        let mut tail: (isize, isize) = (0, 0);
+        let mut knots = [(0, 0); 2];
         for step in input.lines() {
             let (dir, times) = step.split_once(char::is_whitespace).unwrap();
             let times = times.parse::<isize>().unwrap();
+            let head = &mut knots[0];
             match dir {
                 "R" => {
                     head.0 += times;
@@ -27,8 +27,8 @@ impl Day for Day09 {
                 }
                 _ => unreachable!(),
             };
-            while move_knot(head, &mut tail) {
-                positions.insert(tail);
+            while update_knots::<2>(&mut knots) {
+                positions.insert(knots[1]);
             }
         }
         positions.len().to_string()
@@ -100,7 +100,7 @@ fn move_knot(head: (isize, isize), tail: &mut (isize, isize)) -> bool {
     }
 }
 
-fn update_knots<const K: usize>(knots: &mut [(isize, isize); 10]) -> bool {
+fn update_knots<const K: usize>(knots: &mut [(isize, isize); K]) -> bool {
     let mut moved = false;
     for n in 1..K {
         let head = knots[n - 1];
