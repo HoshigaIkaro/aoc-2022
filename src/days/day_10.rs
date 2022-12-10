@@ -14,7 +14,7 @@ impl Day for Day10 {
         let mut x = 1;
         let mut ops = input.lines().map(|line| match line {
             "noop" => Op::Noop,
-            _ => Op::Add(line.split(' ').skip(1).next().unwrap().parse().unwrap()),
+            _ => Op::Add(line.split(' ').nth(1).unwrap().parse().unwrap()),
         });
         let mut out: isize = 0;
         let mut counter = 0;
@@ -31,7 +31,7 @@ impl Day for Day10 {
                         Op::Noop => (),
                         Op::Add(v) => {
                             buf = Some(v);
-                            counter = 1
+                            counter = 1;
                         }
                     },
                     None => break,
@@ -42,7 +42,7 @@ impl Day for Day10 {
                         Op::Noop => (),
                         Op::Add(v) => {
                             buf = Some(v);
-                            counter = 1
+                            counter = 1;
                         }
                     },
                     None => break,
@@ -61,10 +61,11 @@ impl Day for Day10 {
         let mut x = 1;
         let mut ops = input.lines().map(|line| match line {
             "noop" => Op::Noop,
-            _ => Op::Add(line.split(' ').skip(1).next().unwrap().parse().unwrap()),
+            _ => Op::Add(line.split(' ').nth(1).unwrap().parse().unwrap()),
         });
         let mut counter = 0;
         let mut buf = None;
+        let mut out = String::new();
         for _ in 0..6 {
             for cycle in 0..40 {
                 if counter > 0 {
@@ -78,7 +79,7 @@ impl Day for Day10 {
                             Op::Noop => (),
                             Op::Add(v) => {
                                 buf = Some(v);
-                                counter = 1
+                                counter = 1;
                             }
                         },
                         None => break,
@@ -89,21 +90,21 @@ impl Day for Day10 {
                             Op::Noop => (),
                             Op::Add(v) => {
                                 buf = Some(v);
-                                counter = 1
+                                counter = 1;
                             }
                         },
                         None => break,
                     }
                 }
-                
+
                 if x.abs_diff(cycle) <= 1 {
-                    print!("#")
+                    out += "#";
                 } else {
-                    print!(".")
+                    out += ".";
                 }
             }
-            println!()
+            out += "\n";
         }
-        todo!()
+        out
     }
 }
