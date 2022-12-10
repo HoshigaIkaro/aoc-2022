@@ -12,10 +12,7 @@ impl Day for Day10 {
     fn part_1(&self, input: &str) -> String {
         let mut cycle = 0;
         let mut x = 1;
-        let mut ops = input.lines().map(|line| match line {
-            "noop" => Op::Noop,
-            _ => Op::Add(line.split(' ').nth(1).unwrap().parse().unwrap()),
-        });
+        let mut ops = parse_to_iter(input);
         let mut out: isize = 0;
         let mut counter = 0;
         let mut buf = None;
@@ -59,10 +56,7 @@ impl Day for Day10 {
 
     fn part_2(&self, input: &str) -> String {
         let mut x = 1;
-        let mut ops = input.lines().map(|line| match line {
-            "noop" => Op::Noop,
-            _ => Op::Add(line.split(' ').nth(1).unwrap().parse().unwrap()),
-        });
+        let mut ops = parse_to_iter(input);
         let mut counter = 0;
         let mut buf = None;
         let mut out = String::new();
@@ -107,4 +101,11 @@ impl Day for Day10 {
         }
         out
     }
+}
+
+fn parse_to_iter(input: &str) -> impl Iterator<Item = Op> + '_ {
+    input.lines().map(|line| match line {
+        "noop" => Op::Noop,
+        _ => Op::Add(line.split_at(5).1.parse().unwrap()),
+    })
 }
