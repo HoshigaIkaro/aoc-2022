@@ -95,12 +95,6 @@ fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
         tail.0 += h_d.signum();
         tail.1 += v_d.signum();
         true
-    } else if h_d.abs() > 1 {
-        tail.0 += h_d.signum();
-        true
-    } else if v_d.abs() > 1 {
-        tail.1 += v_d.signum();
-        true
     } else {
         false
     }
