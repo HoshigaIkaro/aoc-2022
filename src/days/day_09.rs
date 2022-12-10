@@ -27,7 +27,7 @@ impl Day for Day09 {
                 }
                 _ => unreachable!(),
             };
-            while move_knot(&head, &mut tail) {
+            while move_knot(head, &mut tail) {
                 positions.insert(tail);
             }
         }
@@ -45,7 +45,7 @@ impl Day for Day09 {
                         let head = &mut knots[0];
                         head.0 += 1;
 
-                        if update_knots(&mut knots) {
+                        if update_knots::<10>(&mut knots) {
                             positions.insert(knots[9]);
                         }
                     }
@@ -55,7 +55,7 @@ impl Day for Day09 {
                         let head = &mut knots[0];
                         head.0 -= 1;
 
-                        if update_knots(&mut knots) {
+                        if update_knots::<10>(&mut knots) {
                             positions.insert(knots[9]);
                         }
                     }
@@ -65,7 +65,7 @@ impl Day for Day09 {
                         let head = &mut knots[0];
                         head.1 += 1;
 
-                        if update_knots(&mut knots) {
+                        if update_knots::<10>(&mut knots) {
                             positions.insert(knots[9]);
                         }
                     }
@@ -75,7 +75,7 @@ impl Day for Day09 {
                         let head = &mut knots[0];
                         head.1 -= 1;
 
-                        if update_knots(&mut knots) {
+                        if update_knots::<10>(&mut knots) {
                             positions.insert(knots[9]);
                         }
                     }
@@ -87,7 +87,7 @@ impl Day for Day09 {
     }
 }
 
-fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
+fn move_knot(head: (isize, isize), tail: &mut (isize, isize)) -> bool {
     let v_d = head.1 - tail.1;
     let h_d = head.0 - tail.0;
 
@@ -100,14 +100,14 @@ fn move_knot(head: &(isize, isize), tail: &mut (isize, isize)) -> bool {
     }
 }
 
-fn update_knots(knots: &mut [(isize, isize); 10]) -> bool {
+fn update_knots<const K: usize>(knots: &mut [(isize, isize); 10]) -> bool {
     let mut moved = false;
-    for n in 1..=9 {
+    for n in 1..K {
         let head = knots[n - 1];
-        let mut tail = knots[n];
-        moved = move_knot(&head, &mut tail);
+        let tail = &mut knots[n];
+        moved = move_knot(head, tail);
         if moved {
-            knots[n] = tail;
+            knots[n] = *tail;
         }
     }
     moved
