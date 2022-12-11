@@ -112,15 +112,7 @@ pub struct Day11;
 impl Day for Day11 {
     fn part_1(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let mut thrown: Vec<Vec<usize>> = vec![Vec::new(); monkeys.len()];
-        for _round in 0..20 {
-            for monkey in &mut monkeys {
-                let received = thrown.get_mut(monkey.number).unwrap();
-                monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, &Manage::DivThree);
-            }
-        }
-        let mut monkeys = monkeys.into_iter().collect::<Vec<_>>();
+        simulate::<20>(&mut monkeys, &Manage::DivThree);
         monkeys.sort_by_key(|monkey| monkey.inspected);
         monkeys
             .into_iter()
@@ -134,14 +126,7 @@ impl Day for Day11 {
     fn part_2(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
         let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>();
-        let mut thrown: Vec<Vec<usize>> = vec![Vec::new(); monkeys.len()];
-        for _round in 0..10000 {
-            for monkey in &mut monkeys {
-                let received = thrown.get_mut(monkey.number).unwrap();
-                monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, &Manage::ModLCM(lcm));
-            }
-        }
+        simulate::<10_000>(&mut monkeys, &Manage::ModLCM(lcm));
         monkeys.sort_by_key(|monkey| monkey.inspected);
         monkeys
             .into_iter()
@@ -223,4 +208,15 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             Monkey::new(number, items, operation, divisor, true_target, false_target)
         })
         .collect()
+}
+
+fn simulate<const R: usize>(monkeys: &mut [Monkey], manage: &Manage) {
+    let mut thrown: Vec<Vec<usize>> = vec![Vec::new(); monkeys.len()];
+    for _ in 0..R {
+        for monkey in &mut *monkeys {
+            let received = thrown.get_mut(monkey.number).unwrap();
+            monkey.items.extend(received.drain(0..));
+            monkey.inspect(&mut thrown, manage);
+        }
+    }
 }
