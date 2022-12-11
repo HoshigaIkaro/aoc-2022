@@ -4,6 +4,8 @@ pub mod days;
 mod utils;
 
 pub fn run_day(day: u8) {
+    println!("Day: {day}");
+
     let input = load_input(day);
     let day: Box<dyn days::Day> = match day {
         1 => Box::new(days::Day01),
@@ -20,7 +22,12 @@ pub fn run_day(day: u8) {
     };
 
     let one = day.part_1(&input);
-    println!("{one}");
+    println!("- Part 1:");
+    println!("{one}\n");
+
     let two = day.part_2(&input);
+    println!("- Part 2:");
     println!("{two}");
+
+    println!("------------------");
 }
