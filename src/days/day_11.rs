@@ -1,7 +1,5 @@
 use std::collections::{BTreeMap, VecDeque};
 
-use num::Integer;
-
 use super::Day;
 
 #[derive(Debug, Clone)]
@@ -118,50 +116,54 @@ impl Day for Day11 {
         let mut monkeys = parse_monkeys(input);
         let mut thrown: BTreeMap<u64, VecDeque<u64>> = BTreeMap::new();
         for _round in 0..20 {
-            for (number, monkey) in monkeys.iter_mut() {
-                let received = thrown.entry(*number).or_default();
+            for monkey in monkeys.iter_mut() {
+                let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
                 monkey.inspect(&mut thrown, Divisor::Three);
             }
         }
         let mut monkeys = monkeys.into_iter().collect::<Vec<_>>();
-        monkeys.sort_by_key(|(_, monkey)| monkey.inspected);
+        monkeys.sort_by_key(|monkey| monkey.inspected);
         monkeys
             .into_iter()
             .rev()
             .take(2)
-            .map(|pair| pair.1.inspected as u128)
+            .map(|monkey| monkey.inspected as u128)
             .product::<u128>()
             .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let ghc = monkeys
+        let gcd = monkeys
             .iter()
-            .map(|p| p.1.divisor)
-            .fold(1, |acc, val| acc.lcm(&val));
+            .map(|m| m.divisor)
+            .fold(None, |acc, new| match acc {
+                None => Some(new),
+                Some(old) => Some(gcd(new, old)),
+            })
+            .unwrap();
+        let lcm = monkeys.iter().map(|m| m.divisor).product::<u64>() / gcd;
         let mut thrown: BTreeMap<u64, VecDeque<u64>> = BTreeMap::new();
         for _round in 0..10000 {
-            for (number, monkey) in monkeys.iter_mut() {
-                let received = thrown.entry(*number).or_default();
+            for monkey in monkeys.iter_mut() {
+                let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, Divisor::Custom(ghc));
+                monkey.inspect(&mut thrown, Divisor::Custom(lcm));
             }
         }
-        let mut monkeys = monkeys.into_iter().collect::<Vec<_>>();
-        monkeys.sort_by_key(|(_, monkey)| monkey.inspected);
+        monkeys.sort_by_key(|monkey| monkey.inspected);
         monkeys
             .into_iter()
             .rev()
             .take(2)
-            .map(|pair| pair.1.inspected as u128)
+            .map(|monkey| monkey.inspected as u128)
             .product::<u128>()
             .to_string()
     }
 }
 
-fn parse_monkeys(input: &str) -> BTreeMap<u64, Monkey> {
+fn parse_monkeys(input: &str) -> Vec<Monkey> {
     input
         .split("\n\n")
         .map(|lines| {
@@ -220,10 +222,27 @@ fn parse_monkeys(input: &str) -> BTreeMap<u64, Monkey> {
                 .trim_start_matches("    If false: throw to monkey ")
                 .parse()
                 .unwrap();
-            (
-                number,
-                Monkey::new(number, items, operation, divisor, true_target, false_target),
-            )
+
+            Monkey::new(number, items, operation, divisor, true_target, false_target)
         })
         .collect()
+}
+
+fn gcd(a: u64, b: u64) -> u64 {
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
+    }
+}
+
+#[cfg(test)]
+mod day_11_tests {
+    use super::*;
+
+    #[test]
+    fn gcd_works() {
+        assert_eq!(gcd(5, 10), 5);
+        assert_eq!(gcd(5, 6), 1);
+    }
 }
