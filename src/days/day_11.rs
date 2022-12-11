@@ -135,17 +135,9 @@ impl Day for Day11 {
 
     fn part_2(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let gcd = monkeys
-            .iter()
-            .map(|m| m.divisor)
-            .fold(None, |acc, new| match acc {
-                None => Some(new),
-                Some(old) => Some(gcd(new, old)),
-            })
-            .unwrap();
-        let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>() / gcd;
+        let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>();
         let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
-        for _round in 0..10000 {
+        for _round in 0..100000 {
             for monkey in &mut monkeys {
                 let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
@@ -233,14 +225,6 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             Monkey::new(number, items, operation, divisor, true_target, false_target)
         })
         .collect()
-}
-
-fn gcd(a: usize, b: usize) -> usize {
-    if b == 0 {
-        a
-    } else {
-        gcd(b, a % b)
-    }
 }
 
 #[cfg(test)]
