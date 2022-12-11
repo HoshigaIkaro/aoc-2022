@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use super::Day;
 
 #[derive(Debug, Clone)]
@@ -58,7 +56,7 @@ enum Manage {
 #[derive(Debug, Clone)]
 struct Monkey {
     number: usize,
-    items: VecDeque<usize>,
+    items: Vec<usize>,
     operation: Operation,
     divisor: usize,
     true_target: usize,
@@ -69,7 +67,7 @@ struct Monkey {
 impl Monkey {
     fn new(
         number: usize,
-        items: VecDeque<usize>,
+        items: Vec<usize>,
         operation: Operation,
         divisor: usize,
         true_target: usize,
@@ -86,18 +84,18 @@ impl Monkey {
         }
     }
 
-    fn inspect(&mut self, thrown: &mut [VecDeque<usize>], bored: &Manage) {
+    fn inspect(&mut self, thrown: &mut [Vec<usize>], bored: &Manage) {
         self.inspected += self.items.len();
-        while let Some(item) = self.items.pop_front() {
+        for item in self.items.drain(0..) {
             let new = self.operation.evaluate(item);
             let new = match bored {
                 Manage::DivThree => new / 3,
                 Manage::ModLCM(d) => new % d,
             };
             if new % self.divisor == 0 {
-                thrown.get_mut(self.true_target).unwrap().push_back(new);
+                thrown.get_mut(self.true_target).unwrap().push(new);
             } else {
-                thrown.get_mut(self.false_target).unwrap().push_back(new);
+                thrown.get_mut(self.false_target).unwrap().push(new);
             }
         }
     }
@@ -114,7 +112,7 @@ pub struct Day11;
 impl Day for Day11 {
     fn part_1(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let mut thrown: Vec<VecDeque<usize>> = vec![VecDeque::new(); monkeys.len()];
+        let mut thrown: Vec<Vec<usize>> = vec![Vec::new(); monkeys.len()];
         for _round in 0..20 {
             for monkey in &mut monkeys {
                 let received = thrown.get_mut(monkey.number).unwrap();
@@ -136,7 +134,7 @@ impl Day for Day11 {
     fn part_2(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
         let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>();
-        let mut thrown: Vec<VecDeque<usize>> = vec![VecDeque::new(); monkeys.len()];
+        let mut thrown: Vec<Vec<usize>> = vec![Vec::new(); monkeys.len()];
         for _round in 0..10000 {
             for monkey in &mut monkeys {
                 let received = thrown.get_mut(monkey.number).unwrap();
@@ -170,7 +168,7 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
                 .parse()
                 .unwrap();
 
-            let items: VecDeque<usize> = lines
+            let items: Vec<usize> = lines
                 .next()
                 .unwrap()
                 .strip_prefix("  Starting items: ")
