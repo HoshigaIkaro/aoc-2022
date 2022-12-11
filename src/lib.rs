@@ -1,10 +1,11 @@
+use owo_colors::OwoColorize;
 use utils::load_input;
 
 pub mod days;
 mod utils;
 
 pub fn run_day(day: u8) {
-    println!("Day: {day}");
+    println!("{}", format!("Day: {day}").fg_rgb::<198, 208, 245>());
 
     let input = load_input(day);
     let day: Box<dyn days::Day> = match day {
@@ -22,12 +23,12 @@ pub fn run_day(day: u8) {
     };
 
     let one = day.part_1(&input);
-    println!("- Part 1:");
-    println!("{one}\n");
+    println!("{}", "- Part 1:".fg_rgb::<181, 191, 226>());
+    println!("{}\n", one.fg_rgb::<166, 209, 137>());
 
     let two = day.part_2(&input);
-    println!("- Part 2:");
-    println!("{two}");
+    println!("{}", "- Part 2:".fg_rgb::<181, 191, 226>());
+    println!("{}", two.fg_rgb::<166, 209, 137>());
 
-    println!("------------------");
+    println!("{}", "------------------".fg_rgb::<115, 121, 148>());
 }
