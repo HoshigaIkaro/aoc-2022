@@ -137,7 +137,7 @@ impl Day for Day11 {
         let mut monkeys = parse_monkeys(input);
         let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>();
         let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
-        for _round in 0..100000 {
+        for _round in 0..10000 {
             for monkey in &mut monkeys {
                 let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
