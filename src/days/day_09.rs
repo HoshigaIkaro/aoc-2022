@@ -2,117 +2,80 @@ use std::collections::HashSet;
 
 use super::Day;
 
-/// Position
-type Position = (isize, isize);
-type Positions = HashSet<Position>;
+type Positions = HashSet<Point>;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Point(isize, isize);
+
+impl std::ops::Add for Point {
+    type Output = Point;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0, self.1 + rhs.1)
+    }
+}
+impl std::ops::AddAssign for Point {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+        self.1 += rhs.1;
+    }
+}
+impl std::ops::Sub for Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0, self.1 - rhs.1)
+    }
+}
+impl Point {
+    fn sign_delta(&self) -> Self {
+        Self(self.0.signum(), self.1.signum())
+    }
+}
 
 pub struct Day09;
 
 impl Day for Day09 {
     fn part_1(&self, input: &str) -> String {
-        let mut positions: Positions = HashSet::from_iter(vec![(0, 0)]);
-        let mut knots = [(0, 0); 2];
-        for step in input.lines() {
-            let (dir, times) = step.split_once(char::is_whitespace).unwrap();
+        let mut positions: HashSet<Point> = HashSet::from_iter(std::iter::once(Point(0, 0)));
+        let mut knots = [Point(0, 0); 2];
+        for line in input.lines() {
+            let (dir, times) = line.split_once(' ').unwrap();
             let times = times.parse::<isize>().unwrap();
-            let head = &mut knots[0];
-            match dir {
-                "R" => {
-                    head.0 += times;
-                }
-                "L" => {
-                    head.0 -= times;
-                }
-                "U" => {
-                    head.1 += times;
-                }
-                "D" => {
-                    head.1 -= times;
-                }
+            let delta = match dir {
+                "R" => Point(times, 0),
+                "L" => Point(-times, 0),
+                "U" => Point(0, times),
+                "D" => Point(0, -times),
                 _ => unreachable!(),
             };
-            while update_knots::<2>(&mut knots) {
-                positions.insert(knots[1]);
-            }
+            knots[0] += delta;
+            knots[1] = move_knot(knots[0], knots[1]);
         }
-        positions.len().to_string()
+        dbg!(knots[1]);
+        todo!()
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut knots = [(0, 0); 10];
-        let mut positions: Positions = HashSet::from_iter(vec![(0, 0)]);
-        for step in input.lines() {
-            let (dir, times) = step.split_once(char::is_whitespace).unwrap();
-            match dir {
-                "R" => {
-                    for _ in 0..times.parse().unwrap() {
-                        let head = &mut knots[0];
-                        head.0 += 1;
-
-                        if update_knots::<10>(&mut knots) {
-                            positions.insert(knots[9]);
-                        }
-                    }
-                }
-                "L" => {
-                    for _ in 0..times.parse().unwrap() {
-                        let head = &mut knots[0];
-                        head.0 -= 1;
-
-                        if update_knots::<10>(&mut knots) {
-                            positions.insert(knots[9]);
-                        }
-                    }
-                }
-                "U" => {
-                    for _ in 0..times.parse().unwrap() {
-                        let head = &mut knots[0];
-                        head.1 += 1;
-
-                        if update_knots::<10>(&mut knots) {
-                            positions.insert(knots[9]);
-                        }
-                    }
-                }
-                "D" => {
-                    for _ in 0..times.parse().unwrap() {
-                        let head = &mut knots[0];
-                        head.1 -= 1;
-
-                        if update_knots::<10>(&mut knots) {
-                            positions.insert(knots[9]);
-                        }
-                    }
-                }
-                _ => (),
-            };
-        }
-        positions.len().to_string()
+        todo!()
     }
 }
 
-fn move_knot(head: Position, tail: &mut Position) -> bool {
-    let v_d = head.1 - tail.1;
-    let h_d = head.0 - tail.0;
+fn move_knot(head: Point, mut tail: Point) -> Point {
+    let delta @ Point(h_d, v_d) = head - tail;
 
-    if h_d.abs() > 1 || v_d.abs() > 1 {
-        tail.0 += h_d.signum();
-        tail.1 += v_d.signum();
-        true
-    } else {
-        false
+    if (h_d.abs() == 1 && v_d.abs() > 1) || (h_d.abs() > 1 && v_d.abs() == 1) {
+        dbg!(delta.sign_delta(), tail);
+        tail += delta.sign_delta();
     }
+    tail
 }
 
-fn update_knots<const K: usize>(knots: &mut [Position; K]) -> bool {
-    let mut moved = false;
-    for n in 1..K {
-        let head = knots[n - 1];
-        let tail = &mut knots[n];
-        moved = move_knot(head, tail);
-        if moved {
-            knots[n] = *tail;
-        }
+#[cfg(test)]
+mod day_09_tests {
+    use super::*;
+
+    #[test]
+    fn move_knot_works() {
+        
     }
-    moved
 }
