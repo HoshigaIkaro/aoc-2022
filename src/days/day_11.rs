@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::VecDeque;
 
 use super::Day;
 
@@ -50,9 +50,9 @@ impl Operation {
     }
 }
 
-enum Divisor {
-    Three,
-    Custom(usize),
+enum Manage {
+    DivThree,
+    ModLCM(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -86,17 +86,17 @@ impl Monkey {
         }
     }
 
-    fn inspect(&mut self, thrown: &mut BTreeMap<usize, VecDeque<usize>>, bored: &Divisor) {
+    fn inspect(&mut self, thrown: &mut Vec<VecDeque<usize>>, bored: &Manage) {
         while let Some(item) = self.items.pop_front() {
             let new = self.operation.evaluate(item);
             let new = match bored {
-                Divisor::Three => new / 3,
-                Divisor::Custom(d) => new % d,
+                Manage::DivThree => new / 3,
+                Manage::ModLCM(d) => new % d,
             };
             if new % self.divisor == 0 {
-                thrown.entry(self.true_target).or_default().push_back(new);
+                thrown.get_mut(self.true_target).unwrap().push_back(new);
             } else {
-                thrown.entry(self.false_target).or_default().push_back(new);
+                thrown.get_mut(self.false_target).unwrap().push_back(new);
             }
             self.inspected += 1;
         }
@@ -114,12 +114,12 @@ pub struct Day11;
 impl Day for Day11 {
     fn part_1(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
+        let mut thrown: Vec<VecDeque<usize>> = vec![VecDeque::new(); monkeys.len()];
         for _round in 0..20 {
             for monkey in &mut monkeys {
-                let received = thrown.entry(monkey.number).or_default();
+                let received = thrown.get_mut(monkey.number).unwrap();
                 monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, &Divisor::Three);
+                monkey.inspect(&mut thrown, &Manage::DivThree);
             }
         }
         let mut monkeys = monkeys.into_iter().collect::<Vec<_>>();
@@ -136,12 +136,12 @@ impl Day for Day11 {
     fn part_2(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
         let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>();
-        let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
+        let mut thrown: Vec<VecDeque<usize>> = vec![VecDeque::new(); monkeys.len()];
         for _round in 0..10000 {
             for monkey in &mut monkeys {
-                let received = thrown.entry(monkey.number).or_default();
+                let received = thrown.get_mut(monkey.number).unwrap();
                 monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, &Divisor::Custom(lcm));
+                monkey.inspect(&mut thrown, &Manage::ModLCM(lcm));
             }
         }
         monkeys.sort_by_key(|monkey| monkey.inspected);
