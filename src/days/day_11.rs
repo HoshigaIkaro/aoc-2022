@@ -5,7 +5,7 @@ use super::Day;
 #[derive(Debug, Clone)]
 enum OpValue {
     Old,
-    Lit(u64),
+    Lit(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ impl Operation {
         Self { left, op, right }
     }
 
-    fn evaluate(&self, old: u64) -> u64 {
+    fn evaluate(&self, old: usize) -> usize {
         let left = match self.left {
             OpValue::Old => old,
             OpValue::Lit(val) => val,
@@ -52,28 +52,28 @@ impl Operation {
 
 enum Divisor {
     Three,
-    Custom(u64),
+    Custom(usize),
 }
 
 #[derive(Debug, Clone)]
 struct Monkey {
-    number: u64,
-    items: VecDeque<u64>,
+    number: usize,
+    items: VecDeque<usize>,
     operation: Operation,
-    divisor: u64,
-    true_target: u64,
-    false_target: u64,
-    inspected: u64,
+    divisor: usize,
+    true_target: usize,
+    false_target: usize,
+    inspected: usize,
 }
 
 impl Monkey {
     fn new(
-        number: u64,
-        items: VecDeque<u64>,
+        number: usize,
+        items: VecDeque<usize>,
         operation: Operation,
-        divisor: u64,
-        true_target: u64,
-        false_target: u64,
+        divisor: usize,
+        true_target: usize,
+        false_target: usize,
     ) -> Self {
         Self {
             number,
@@ -86,7 +86,7 @@ impl Monkey {
         }
     }
 
-    fn inspect(&mut self, thrown: &mut BTreeMap<u64, VecDeque<u64>>, bored: Divisor) {
+    fn inspect(&mut self, thrown: &mut BTreeMap<usize, VecDeque<usize>>, bored: &Divisor) {
         while let Some(item) = self.items.pop_front() {
             let new = self.operation.evaluate(item);
             let new = match bored {
@@ -114,12 +114,12 @@ pub struct Day11;
 impl Day for Day11 {
     fn part_1(&self, input: &str) -> String {
         let mut monkeys = parse_monkeys(input);
-        let mut thrown: BTreeMap<u64, VecDeque<u64>> = BTreeMap::new();
+        let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
         for _round in 0..20 {
-            for monkey in monkeys.iter_mut() {
+            for monkey in &mut monkeys {
                 let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, Divisor::Three);
+                monkey.inspect(&mut thrown, &Divisor::Three);
             }
         }
         let mut monkeys = monkeys.into_iter().collect::<Vec<_>>();
@@ -143,13 +143,13 @@ impl Day for Day11 {
                 Some(old) => Some(gcd(new, old)),
             })
             .unwrap();
-        let lcm = monkeys.iter().map(|m| m.divisor).product::<u64>() / gcd;
-        let mut thrown: BTreeMap<u64, VecDeque<u64>> = BTreeMap::new();
+        let lcm = monkeys.iter().map(|m| m.divisor).product::<usize>() / gcd;
+        let mut thrown: BTreeMap<usize, VecDeque<usize>> = BTreeMap::new();
         for _round in 0..10000 {
-            for monkey in monkeys.iter_mut() {
+            for monkey in &mut monkeys {
                 let received = thrown.entry(monkey.number).or_default();
                 monkey.items.extend(received.drain(0..));
-                monkey.inspect(&mut thrown, Divisor::Custom(lcm));
+                monkey.inspect(&mut thrown, &Divisor::Custom(lcm));
             }
         }
         monkeys.sort_by_key(|monkey| monkey.inspected);
@@ -157,8 +157,8 @@ impl Day for Day11 {
             .into_iter()
             .rev()
             .take(2)
-            .map(|monkey| monkey.inspected as u128)
-            .product::<u128>()
+            .map(|monkey| monkey.inspected)
+            .product::<usize>()
             .to_string()
     }
 }
@@ -168,7 +168,7 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
         .split("\n\n")
         .map(|lines| {
             let mut lines = lines.lines();
-            let number: u64 = lines
+            let number: usize = lines
                 .next()
                 .unwrap()
                 .trim_start_matches("Monkey ")
@@ -176,7 +176,7 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
                 .parse()
                 .unwrap();
 
-            let items: VecDeque<u64> = lines
+            let items: VecDeque<usize> = lines
                 .next()
                 .unwrap()
                 .trim_start_matches("  Starting items: ")
@@ -192,31 +192,31 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             let left = operation
                 .next()
                 .unwrap()
-                .parse::<u64>()
-                .map_or(OpValue::Old, |val| OpValue::Lit(val));
+                .parse::<usize>()
+                .map_or(OpValue::Old, OpValue::Lit);
             let op = Op::new(operation.next().unwrap());
             let right = operation
                 .next()
                 .unwrap()
-                .parse::<u64>()
-                .map_or(OpValue::Old, |val| OpValue::Lit(val));
+                .parse::<usize>()
+                .map_or(OpValue::Old, OpValue::Lit);
             let operation = Operation::new(left, op, right);
 
-            let divisor: u64 = lines
+            let divisor: usize = lines
                 .next()
                 .unwrap()
                 .trim_start_matches("  Test: divisible by ")
                 .parse()
                 .unwrap();
 
-            let true_target: u64 = lines
+            let true_target: usize = lines
                 .next()
                 .unwrap()
                 .trim_start_matches("    If true: throw to monkey ")
                 .parse()
                 .unwrap();
 
-            let false_target: u64 = lines
+            let false_target: usize = lines
                 .next()
                 .unwrap()
                 .trim_start_matches("    If false: throw to monkey ")
@@ -228,7 +228,7 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
         .collect()
 }
 
-fn gcd(a: u64, b: u64) -> u64 {
+fn gcd(a: usize, b: usize) -> usize {
     if b == 0 {
         a
     } else {
