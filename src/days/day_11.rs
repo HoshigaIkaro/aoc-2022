@@ -86,7 +86,8 @@ impl Monkey {
         }
     }
 
-    fn inspect(&mut self, thrown: &mut Vec<VecDeque<usize>>, bored: &Manage) {
+    fn inspect(&mut self, thrown: &mut [VecDeque<usize>], bored: &Manage) {
+        self.inspected += self.items.len();
         while let Some(item) = self.items.pop_front() {
             let new = self.operation.evaluate(item);
             let new = match bored {
@@ -98,7 +99,6 @@ impl Monkey {
             } else {
                 thrown.get_mut(self.false_target).unwrap().push_back(new);
             }
-            self.inspected += 1;
         }
     }
 }
