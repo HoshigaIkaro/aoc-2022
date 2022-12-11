@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use super::Day;
 
 #[derive(Debug)]
