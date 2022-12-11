@@ -171,15 +171,18 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             let number: usize = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("Monkey ")
-                .trim_end_matches(':')
+                .strip_prefix("Monkey ")
+                .unwrap()
+                .strip_suffix(':')
+                .unwrap()
                 .parse()
                 .unwrap();
 
             let items: VecDeque<usize> = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("  Starting items: ")
+                .strip_prefix("  Starting items: ")
+                .unwrap()
                 .split(", ")
                 .map(|i| i.parse().unwrap())
                 .collect();
@@ -187,7 +190,8 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             let mut operation = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("  Operation: new = ")
+                .strip_prefix("  Operation: new = ")
+                .unwrap()
                 .split_ascii_whitespace();
             let left = operation
                 .next()
@@ -205,21 +209,24 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             let divisor: usize = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("  Test: divisible by ")
+                .strip_prefix("  Test: divisible by ")
+                .unwrap()
                 .parse()
                 .unwrap();
 
             let true_target: usize = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("    If true: throw to monkey ")
+                .strip_prefix("    If true: throw to monkey ")
+                .unwrap()
                 .parse()
                 .unwrap();
 
             let false_target: usize = lines
                 .next()
                 .unwrap()
-                .trim_start_matches("    If false: throw to monkey ")
+                .strip_prefix("    If false: throw to monkey ")
+                .unwrap()
                 .parse()
                 .unwrap();
 
