@@ -128,8 +128,8 @@ impl Day for Day11 {
             .into_iter()
             .rev()
             .take(2)
-            .map(|monkey| monkey.inspected as u128)
-            .product::<u128>()
+            .map(|monkey| monkey.inspected)
+            .product::<usize>()
             .to_string()
     }
 
@@ -225,15 +225,4 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             Monkey::new(number, items, operation, divisor, true_target, false_target)
         })
         .collect()
-}
-
-#[cfg(test)]
-mod day_11_tests {
-    use super::*;
-
-    #[test]
-    fn gcd_works() {
-        assert_eq!(gcd(5, 10), 5);
-        assert_eq!(gcd(5, 6), 1);
-    }
 }
