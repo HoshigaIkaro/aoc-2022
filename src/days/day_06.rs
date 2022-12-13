@@ -14,6 +14,7 @@ impl Day for Day06 {
     }
 }
 
+#[allow(clippy::search_is_some)]
 fn find<const W: usize>(input: &str) -> String {
     input
         .chars()
