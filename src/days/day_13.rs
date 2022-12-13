@@ -60,7 +60,26 @@ impl PartialOrd for Value {
 
 impl Ord for Value {
     fn cmp(&self, other: &Self) -> Ordering {
-        get_order(self, other)
+        match (self, other) {
+            (Value::Int(left), Value::Int(right)) => left.cmp(right),
+            (Value::Int(left), right) => Value::new_list_single(*left).cmp(right),
+            (left, Value::Int(right)) => left.cmp(&Value::new_list_single(*right)),
+            (Value::List(left), Value::List(right)) => {
+                for i in 0..left.len().max(right.len()) {
+                    match (left.get(i), right.get(i)) {
+                        (Some(left), Some(right)) => match left.cmp(right) {
+                            Ordering::Less => return Ordering::Less, // in order
+                            Ordering::Equal => (),
+                            Ordering::Greater => return Ordering::Greater, // not in order
+                        },
+                        (Some(_), None) => return Ordering::Greater, // right ran out first -> not in order
+                        (None, Some(_)) => return Ordering::Less, // left ran out first -> in order
+                        (None, None) => unreachable!(),
+                    }
+                }
+                Ordering::Equal
+            }
+        }
     }
 }
 pub struct Day13;
@@ -74,7 +93,7 @@ impl Day for Day13 {
                 let (left, right) = pair.split_once('\n').unwrap();
                 let left = Value::new(left);
                 let right = Value::new(right);
-                if get_order(&left, &right) == Ordering::Less {
+                if left.cmp(&right) == Ordering::Less {
                     index + 1
                 } else {
                     0
@@ -101,29 +120,6 @@ impl Day for Day13 {
             .map(|(i, _)| i + 1)
             .product::<usize>()
             .to_string()
-    }
-}
-
-fn get_order(left: &Value, right: &Value) -> Ordering {
-    match (left, right) {
-        (Value::Int(left), Value::Int(right)) => left.cmp(right),
-        (Value::Int(left), right) => get_order(&Value::new_list_single(*left), right),
-        (left, Value::Int(right)) => get_order(left, &Value::new_list_single(*right)),
-        (Value::List(left), Value::List(right)) => {
-            for i in 0..left.len().max(right.len()) {
-                match (left.get(i), right.get(i)) {
-                    (Some(left), Some(right)) => match get_order(left, right) {
-                        Ordering::Less => return Ordering::Less, // in order
-                        Ordering::Equal => (),
-                        Ordering::Greater => return Ordering::Greater, // not in order
-                    },
-                    (Some(_), None) => return Ordering::Greater, // right ran out first -> not in order
-                    (None, Some(_)) => return Ordering::Less,    // left ran out first -> in order
-                    (None, None) => unreachable!(),
-                }
-            }
-            Ordering::Equal
-        }
     }
 }
 
@@ -154,41 +150,41 @@ mod day_13_tests {
         // 1
         let left = Value::new("[1,1,3,1,1]");
         let right = Value::new("[1,1,5,1,1]");
-        assert_eq!(get_order(&left, &right), Ordering::Less);
+        assert_eq!(left.cmp(&right), Ordering::Less);
 
         //2
         let left = Value::new("[[1],[2,3,4]]");
         let right = Value::new("[[1],4]");
-        assert_eq!(get_order(&left, &right), Ordering::Less);
+        assert_eq!(left.cmp(&right), Ordering::Less);
 
         //3
         let left = Value::new("[9]");
         let right = Value::new("[[8,7,6]]");
-        assert_eq!(get_order(&left, &right), Ordering::Greater);
+        assert_eq!(left.cmp(&right), Ordering::Greater);
 
         // 4
         let left = Value::new("[[4,4],4,4]");
         let right = Value::new("[[4,4],4,4,4]");
-        assert_eq!(get_order(&left, &right), Ordering::Less);
+        assert_eq!(left.cmp(&right), Ordering::Less);
 
         // 5
         let left = Value::new("[7,7,7,7]");
         let right = Value::new("[7,7,7]");
-        assert_eq!(get_order(&left, &right), Ordering::Greater);
+        assert_eq!(left.cmp(&right), Ordering::Greater);
 
         // 6
         let left = Value::new("[]");
         let right = Value::new("[3]");
-        assert_eq!(get_order(&left, &right), Ordering::Less);
+        assert_eq!(left.cmp(&right), Ordering::Less);
 
         // 7
         let left = Value::new("[[[]]]");
         let right = Value::new("[[]]");
-        assert_eq!(get_order(&left, &right), Ordering::Greater);
+        assert_eq!(left.cmp(&right), Ordering::Greater);
 
         // 8
         let left = Value::new("[1,[2,[3,[4,[5,6,7]]]],8,9]");
         let right = Value::new("[1,[2,[3,[4,[5,6,0]]]],8,9]");
-        assert_eq!(get_order(&left, &right), Ordering::Greater);
+        assert_eq!(left.cmp(&right), Ordering::Greater);
     }
 }
