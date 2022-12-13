@@ -7,21 +7,21 @@ impl Day for Day02 {
         input
             .lines()
             .map(|line| {
-                let (a, b) = line.split_once(" ").unwrap();
+                let (a, b) = line.split_at(2);
                 match a {
-                    "A" => match b {
+                    "A " => match b {
                         "X" => 1 + 3,
                         "Y" => 2 + 6,
                         "Z" => 3 + 0,
                         _ => unimplemented!(),
                     },
-                    "B" => match b {
+                    "B " => match b {
                         "X" => 1 + 0,
                         "Y" => 2 + 3,
                         "Z" => 3 + 6,
                         _ => unimplemented!(),
                     },
-                    "C" => match b {
+                    "C " => match b {
                         "X" => 1 + 6,
                         "Y" => 2 + 0,
                         "Z" => 3 + 3,
@@ -38,23 +38,23 @@ impl Day for Day02 {
         input
             .lines()
             .map(|line| {
-                let (a, b) = line.split_once(" ").unwrap();
+                let (a, b) = line.split_at(2);
                 match a {
-                    "A" => match b {
+                    "A " => match b {
                         // rock
                         "X" => 3 + 0, // sciscors
                         "Y" => 1 + 3, // rock
                         "Z" => 2 + 6, // paper
                         _ => unimplemented!(),
                     },
-                    "B" => match b {
+                    "B " => match b {
                         // paper
                         "X" => 1 + 0, // rock
                         "Y" => 2 + 3, // paper
                         "Z" => 3 + 6, // scissors
                         _ => unimplemented!(),
                     },
-                    "C" => match b {
+                    "C " => match b {
                         // scissors
                         "X" => 2 + 0, // paper
                         "Y" => 3 + 3, // scissors
