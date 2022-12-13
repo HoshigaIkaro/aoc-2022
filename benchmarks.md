@@ -14,7 +14,7 @@ The following table lists times rounded to the nearest microsecond after running
 
 |  Day  | Part 1 | Part 2 |
 | :---: | :----: | :----: |
-|   1   | 23 µs  | 25 µs  |
+|   1   | 23 µs  | 24 µs  |
 |   2   | 47 µs  | 47 µs  |
 |   3   | 13 µs  | 13 µs  |
 |   4   | 74 µs  | 71 µs  |
