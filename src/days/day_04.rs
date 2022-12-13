@@ -7,13 +7,11 @@ impl Day for Day04 {
         input
             .lines()
             .map(|line| {
-                line.split(',')
-                    .flat_map(|range| range.split('-'))
-                    .map(|s| s.parse::<u8>().unwrap())
-                    .collect::<Vec<_>>()
+                let (left, right) = line.split_once(',').unwrap();
+                (to_pair(left), to_pair(right))
             })
-            .filter(|arr| {
-                (arr[0] >= arr[2] && arr[1] <= arr[3]) || (arr[2] >= arr[0] && arr[3] <= arr[1])
+            .filter(|(left, right)| {
+                (left.0 >= right.0 && left.1 <= right.1) || (right.0 >= left.0 && right.1 <= left.1)
             })
             .count()
             .to_string()
@@ -23,13 +21,16 @@ impl Day for Day04 {
         input
             .lines()
             .map(|line| {
-                line.split(',')
-                    .flat_map(|range| range.split('-'))
-                    .map(|s| s.parse::<u8>().unwrap())
-                    .collect::<Vec<_>>()
+                let (left, right) = line.split_once(',').unwrap();
+                (to_pair(left), to_pair(right))
             })
-            .filter(|arr| arr[0] <= arr[3] && arr[2] <= arr[1])
+            .filter(|(left, right)| left.0 <= right.1 && right.0 <= left.1)
             .count()
             .to_string()
     }
+}
+
+fn to_pair(input: &str) -> (usize, usize) {
+    let (left, right) = input.split_once('-').unwrap();
+    (left.parse().unwrap(), right.parse().unwrap())
 }
