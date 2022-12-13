@@ -1,86 +1,50 @@
-use std::ops::Index;
-
-use std::collections::{BinaryHeap, HashMap, HashSet};
-
-type Point = (usize, usize);
-
-#[derive(Copy, Clone, Eq, PartialEq)]
-struct Path {
-    position: Point,
-    steps: usize,
-}
-
-impl Path {
-    fn new(position: Point) -> Self {
-        Self { position, steps: 0 }
-    }
-}
-
-impl Ord for Path {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.steps.cmp(&self.steps) // min heap
-    }
-}
-
-impl PartialOrd for Path {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use super::Day;
+
+type Point = (usize, usize);
 
 pub struct Day12;
 
 impl Day for Day12 {
     fn part_1(&self, input: &str) -> String {
-        let board: Vec<Vec<usize>> = input
+        let board: Vec<usize> = input
             .lines()
-            .map(|line| line.chars().map(char_to_height).collect())
+            .flat_map(|line| line.chars().map(char_to_height))
             .collect();
+        let cols = input.find('\n').unwrap();
+        let rows = board.len() / cols;
 
-        let start_index = board
-            .iter()
-            .flatten()
-            .position(|c| *c == 'a' as usize - 1)
-            .unwrap();
-        let rows = board.len();
-        let cols = board[0].len();
-        dbg!(rows, cols);
+        let start_index = board.iter().position(|h| *h == 0).unwrap();
         let start_point = (start_index % cols, start_index / cols);
-        let mut dist: HashMap<Point, usize> = HashMap::new();
-        dist.insert(start_point, 0);
-        let mut queue: BinaryHeap<Path> = BinaryHeap::new();
-        queue.push(Path::new(start_point));
 
-        while let Some(Path { position, steps }) = queue.pop() {
-            // dbg!(position);
-            let current_height = board[position.1][position.0];
-            if current_height == 'z' as usize + 1 {
-                dbg!(steps);
-            }
+        let mut visited: HashSet<Point> = HashSet::new();
+        let mut queue: VecDeque<Point> = std::iter::once(start_point).collect();
+        let mut dist: HashMap<Point, usize> = std::iter::once((start_point, 0)).collect();
 
-            if steps > dist[&position] {
+        while let Some(point @ (x, y)) = queue.pop_front() {
+            if !visited.insert(point) {
                 continue;
             }
 
-            for new_position @ (x, y) in get_new_positions(position, rows, cols) {
-                if board[y][x] > current_height + 1{
-                    continue;
-                }
-                let next = Path {
-                    steps: steps + 1,
-                    position: new_position,
-                };
+            let current_height = board[y * cols + x];
+            if current_height == 27 {
+                return dist[&point].to_string();
+            }
 
-                // dbg!('h');
-                if next.steps < *dist.entry(new_position).or_insert(usize::MAX) {
-                    queue.push(next);
-                    dist.insert(new_position, next.steps);
+            for new_point @ (x_n, y_n) in get_new_positions(point, rows, cols) {
+                let new_height = board[y_n * cols + x_n];
+                if new_height <= current_height + 1 {
+                    let current_dist = dist[&point];
+                    let new_dist = dist.entry(new_point).or_insert(usize::MAX);
+                    if current_dist + 1 < *new_dist {
+                        dist.insert(new_point, current_dist + 1);
+                        queue.push_back(new_point);
+                    }
                 }
             }
         }
-        // println!("{:?}", dist);
+
         unreachable!()
     }
 
@@ -91,9 +55,9 @@ impl Day for Day12 {
 
 fn char_to_height(c: char) -> usize {
     match c {
-        'a'..='z' => c as usize,
-        'S' => 'a' as usize - 1,
-        'E' => 'z' as usize + 1,
+        'a'..='z' => c as usize - 'a' as usize + 1,
+        'S' => 0,
+        'E' => 27,
         _ => unreachable!(),
     }
 }
