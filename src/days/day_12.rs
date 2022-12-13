@@ -114,7 +114,7 @@ fn char_to_height_reverse(c: char) -> usize {
 }
 
 fn get_new_positions((col, row): Point, rows: usize, cols: usize) -> Vec<Point> {
-    let mut positions = Vec::new();
+    let mut positions = Vec::with_capacity(4);
     if row > 0 {
         positions.push((col, row - 1));
     }
