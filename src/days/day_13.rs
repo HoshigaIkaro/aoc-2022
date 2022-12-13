@@ -90,7 +90,6 @@ impl Day for Day13 {
             .split("\n\n")
             .enumerate()
             .map(|(index, pair)| {
-                
                 let (left, right) = pair.split_once('\n').unwrap();
                 let left = Value::new(left);
                 let right = Value::new(right);
@@ -109,10 +108,12 @@ impl Day for Day13 {
         let two = Value::new("[[6]]");
         let mut values: Vec<Value> = input
             .lines()
-            .filter_map(|s| if s.is_empty() {
-                None
-            } else {
-                Some(Value::new(s))
+            .filter_map(|s| {
+                if s.is_empty() {
+                    None
+                } else {
+                    Some(Value::new(s))
+                }
             })
             .chain(vec![one.clone(), two.clone()])
             .collect();
