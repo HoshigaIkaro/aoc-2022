@@ -4,7 +4,7 @@ use aoc::run_day;
 
 fn main() {
     let start = Instant::now();
-    for day in 1..=10 {
+    for day in 1..=12 {
         run_day(day);
     }
     let time = start.elapsed();
