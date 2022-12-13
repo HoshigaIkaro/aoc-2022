@@ -40,7 +40,7 @@ impl Day for Day12 {
                 if new_height <= current_height + 1 {
                     let current_dist = dist[&point];
 
-                    let new_dist = dist.entry(new_point).or_insert(usize::MAX);
+                    let new_dist = dist.get(&new_point).unwrap_or(&usize::MAX);
                     if current_dist < *new_dist {
                         dist.insert(new_point, current_dist + 1);
                         queue.push_back(new_point);
@@ -82,7 +82,7 @@ impl Day for Day12 {
                 if new_height <= current_height + 1 {
                     let current_dist = dist[&point];
 
-                    let new_dist = dist.entry(new_point).or_insert(usize::MAX);
+                    let new_dist = dist.get(&new_point).unwrap_or(&usize::MAX);
                     if current_dist < *new_dist {
                         dist.insert(new_point, current_dist + 1);
                         queue.push_back(new_point);
