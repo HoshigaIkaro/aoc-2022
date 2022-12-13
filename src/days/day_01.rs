@@ -25,7 +25,7 @@ impl Day for Day01 {
                     .sum::<usize>()
             })
             .collect::<Vec<usize>>();
-        elves.sort();
+        elves.sort_unstable();
         elves.iter().rev().take(3).sum::<usize>().to_string()
     }
 }
