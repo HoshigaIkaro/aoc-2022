@@ -6,18 +6,18 @@ pub struct Day08;
 
 impl Day for Day08 {
     fn part_1(&self, input: &str) -> String {
-        let grid: Vec<Vec<usize>> = parse(input);
-        let rows = grid.len();
-        let cols = grid[0].len();
+        let trees: Vec<Vec<usize>> = parse(input);
+        let rows = trees.len();
+        let cols = trees[0].len();
         (1..rows - 1)
             .map(|row| {
                 (1..cols - 1)
                     .filter(|&col| {
-                        let height = grid[row][col];
-                        (0..col).all(|i| grid[row][i] < height)
-                            || (col + 1..cols).all(|i| grid[row][i] < height)
-                            || (0..row).all(|r| grid[r][col] < height)
-                            || (row + 1..rows).all(|r| grid[r][col] < height)
+                        let height = trees[row][col];
+                        (0..col).all(|i| trees[row][i] < height)
+                            || (col + 1..cols).all(|i| trees[row][i] < height)
+                            || (0..row).all(|r| trees[r][col] < height)
+                            || (row + 1..rows).all(|r| trees[r][col] < height)
                     })
                     .count()
             })
