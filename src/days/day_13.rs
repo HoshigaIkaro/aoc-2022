@@ -105,7 +105,7 @@ impl Day for Day13 {
     fn part_2(&self, input: &str) -> String {
         let one = Value::new("[[2]]");
         let two = Value::new("[[6]]");
-        let (one, two) = input
+        input
             .lines()
             .filter_map(|s| {
                 if s.is_empty() {
@@ -114,16 +114,17 @@ impl Day for Day13 {
                     Some(Value::new(s))
                 }
             })
-            .fold((1, 2), |(one_count, two_count), value| {
+            .fold([1, 2], |[one_count, two_count], value| {
                 match (one.cmp(&value), two.cmp(&value)) {
-                    (Ordering::Greater, Ordering::Greater) => (one_count + 1, two_count + 1),
-                    (Ordering::Greater, _) => (one_count + 1, two_count),
-                    (_, Ordering::Greater) => (one_count, two_count + 1),
-                    _ => (one_count, two_count),
+                    (Ordering::Greater, Ordering::Greater) => [one_count + 1, two_count + 1],
+                    (Ordering::Greater, _) => [one_count + 1, two_count],
+                    (_, Ordering::Greater) => [one_count, two_count + 1],
+                    _ => [one_count, two_count],
                 }
-            });
-
-        (one * two).to_string()
+            })
+            .into_iter()
+            .product::<usize>()
+            .to_string()
     }
 }
 
