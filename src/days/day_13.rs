@@ -104,9 +104,7 @@ impl Day for Day13 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let one = Value::new("[[2]]");
-        let two = Value::new("[[6]]");
-        let mut values: Vec<Value> = input
+        let values: Vec<Value> = input
             .lines()
             .filter_map(|s| {
                 if s.is_empty() {
@@ -115,16 +113,13 @@ impl Day for Day13 {
                     Some(Value::new(s))
                 }
             })
-            .chain(vec![one.clone(), two.clone()])
             .collect();
-        values.sort();
-        values
-            .into_iter()
-            .enumerate()
-            .filter(|(_, v)| v == &one || *v == two)
-            .map(|(i, _)| i + 1)
-            .product::<usize>()
-            .to_string()
+
+        let two = Value::new("[[6]]");
+        let two = values.iter().filter(|v| **v <= two).count() + 2;
+        let one = Value::new("[[2]]");
+        let one = values.iter().filter(|v| **v <= one).count() + 1;
+        (one * two).to_string()
     }
 }
 
