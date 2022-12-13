@@ -104,7 +104,9 @@ impl Day for Day13 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let values: Vec<Value> = input
+        let one = Value::new("[[2]]");
+        let two = Value::new("[[6]]");
+        let (one, two) = input
             .lines()
             .filter_map(|s| {
                 if s.is_empty() {
@@ -113,12 +115,15 @@ impl Day for Day13 {
                     Some(Value::new(s))
                 }
             })
-            .collect();
+            .fold((1, 2), |(one_count, two_count), value| {
+                match (one.cmp(&value), two.cmp(&value)) {
+                    (Ordering::Greater, Ordering::Greater) => (one_count + 1, two_count + 1),
+                    (Ordering::Greater, _) => (one_count + 1, two_count),
+                    (_, Ordering::Greater) => (one_count, two_count + 1),
+                    _ => (one_count, two_count),
+                }
+            });
 
-        let two = Value::new("[[6]]");
-        let two = values.iter().filter(|v| **v <= two).count() + 2;
-        let one = Value::new("[[2]]");
-        let one = values.iter().filter(|v| **v <= one).count() + 1;
         (one * two).to_string()
     }
 }
