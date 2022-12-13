@@ -1,8 +1,4 @@
-use core::panic;
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    ops::Add,
-};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use super::Day;
 
@@ -12,7 +8,7 @@ pub struct Day12;
 
 impl Day for Day12 {
     fn part_1(&self, input: &str) -> String {
-        let chars: Vec<char> = input.lines().flat_map(|line| line.chars()).collect();
+        let chars: Vec<char> = input.lines().flat_map(str::chars).collect();
 
         let cols = input.find('\n').unwrap();
         let rows = chars.len() / cols;
@@ -54,7 +50,7 @@ impl Day for Day12 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let chars: Vec<char> = input.lines().flat_map(|line| line.chars()).collect();
+        let chars: Vec<char> = input.lines().flat_map(str::chars).collect();
 
         let cols = input.find('\n').unwrap();
         let rows = chars.len() / cols;
