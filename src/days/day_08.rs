@@ -27,31 +27,31 @@ impl Day for Day08 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let grid = parse(input);
-        let rows = grid.len();
-        let cols = grid[0].len();
+        let trees = parse(input);
+        let rows = trees.len();
+        let cols = trees[0].len();
         (1..rows - 1)
             .map(|row| {
                 (1..cols - 1)
                     .map(|col| {
-                        let height = grid[row][col];
+                        let height = trees[row][col];
                         let left = (0..col)
                             .enumerate()
                             .rev()
-                            .find(|(_, c)| grid[row][*c] >= height)
+                            .find(|(_, c)| trees[row][*c] >= height)
                             .map_or(col, |(index, _)| col - index);
                         let up = (0..row)
                             .enumerate()
                             .rev()
-                            .find(|(_, r)| grid[*r][col] >= height)
+                            .find(|(_, r)| trees[*r][col] >= height)
                             .map_or(row, |(index, _)| row - index);
                         let right = (col + 1..cols)
                             .enumerate()
-                            .find(|(_, c)| grid[row][*c] >= height)
+                            .find(|(_, c)| trees[row][*c] >= height)
                             .map_or(cols - col - 1, |(index, _)| index + 1);
                         let down = (row + 1..rows)
                             .enumerate()
-                            .find(|(_i, r)| grid[*r][col] >= height)
+                            .find(|(_i, r)| trees[*r][col] >= height)
                             .map_or(rows - row - 1, |(index, _)| index + 1);
                         left * up * right * down
                     })
