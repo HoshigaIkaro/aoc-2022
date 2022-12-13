@@ -8,8 +8,8 @@ impl Day for Day01 {
             .split("\n\n")
             .map(|elf| {
                 elf.lines()
-                    .map(|food| food.parse::<u32>().unwrap())
-                    .sum::<u32>()
+                    .map(|food| food.parse::<usize>().unwrap())
+                    .sum::<usize>()
             })
             .max()
             .unwrap()
@@ -21,11 +21,11 @@ impl Day for Day01 {
             .split("\n\n")
             .map(|elf| {
                 elf.lines()
-                    .map(|food| food.parse::<u32>().unwrap())
-                    .sum::<u32>()
+                    .map(|food| food.parse::<usize>().unwrap())
+                    .sum::<usize>()
             })
-            .collect::<Vec<u32>>();
+            .collect::<Vec<usize>>();
         elves.sort();
-        elves.iter().rev().take(3).sum::<u32>().to_string()
+        elves.iter().rev().take(3).sum::<usize>().to_string()
     }
 }
