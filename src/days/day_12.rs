@@ -73,15 +73,12 @@ impl Day for Day12 {
             }
 
             let current_height = board[y * cols + x];
+            if current_height == 25 {
+                return dist[&point].to_string();
+            }
+
             for new_point @ (x_n, y_n) in get_new_positions(point, rows, cols) {
                 let new_height = board[y_n * cols + x_n];
-                if new_height == 25 {
-                    if current_height == 24 {
-                        let steps = dist[&point] + 1;
-                        return steps.to_string();
-                    }
-                    continue;
-                }
                 if new_height <= current_height + 1 {
                     let current_dist = dist[&point];
 
