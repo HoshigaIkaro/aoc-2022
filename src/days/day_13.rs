@@ -93,10 +93,9 @@ impl Day for Day13 {
                 let (left, right) = pair.split_once('\n').unwrap();
                 let left = Value::new(left);
                 let right = Value::new(right);
-                if left.cmp(&right) == Ordering::Less {
-                    index + 1
-                } else {
-                    0
+                match left.cmp(&right) {
+                    Ordering::Less => index + 1,
+                    _ => 0,
                 }
             })
             .sum::<usize>()
