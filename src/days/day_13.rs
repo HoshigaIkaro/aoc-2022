@@ -20,11 +20,11 @@ impl Value {
                 match c {
                     '[' => {
                         level += 1;
-                        buf.push('[')
+                        buf.push('[');
                     }
                     ']' => {
                         level -= 1;
-                        buf.push(']')
+                        buf.push(']');
                     }
                     ',' => {
                         if level == 0 {
@@ -106,7 +106,7 @@ impl Day for Day13 {
 
 fn get_order(left: &Value, right: &Value) -> Ordering {
     match (left, right) {
-        (Value::Int(left), Value::Int(right)) => left.cmp(&right),
+        (Value::Int(left), Value::Int(right)) => left.cmp(right),
         (Value::Int(left), right) => get_order(&Value::new_list_single(*left), right),
         (left, Value::Int(right)) => get_order(left, &Value::new_list_single(*right)),
         (Value::List(left), Value::List(right)) => {
