@@ -6,18 +6,18 @@ pub struct Day08;
 
 impl Day for Day08 {
     fn part_1(&self, input: &str) -> String {
-        let trees: Vec<Vec<usize>> = parse(input);
-        let rows = trees.len();
-        let cols = trees[0].len();
+        let trees: Vec<usize> = parse(input);
+        let cols = input.find('\n').unwrap();
+        let rows = trees.len() / cols;
         (1..rows - 1)
             .map(|row| {
                 (1..cols - 1)
                     .filter(|&col| {
-                        let height = trees[row][col];
-                        (0..col).all(|i| trees[row][i] < height)
-                            || (col + 1..cols).all(|i| trees[row][i] < height)
-                            || (0..row).all(|r| trees[r][col] < height)
-                            || (row + 1..rows).all(|r| trees[r][col] < height)
+                        let height = trees[row * cols + col];
+                        (0..col).all(|i| trees[row * cols + i] < height)
+                            || (col + 1..cols).all(|i| trees[row * cols + i] < height)
+                            || (0..row).all(|r| trees[r * cols + col] < height)
+                            || (row + 1..rows).all(|r| trees[r * cols + col] < height)
                     })
                     .count()
             })
@@ -27,31 +27,31 @@ impl Day for Day08 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let trees = parse(input);
-        let rows = trees.len();
-        let cols = trees[0].len();
+        let trees: Vec<usize> = parse(input);
+        let cols = input.find('\n').unwrap();
+        let rows = trees.len() / cols;
         (1..rows - 1)
             .map(|row| {
                 (1..cols - 1)
                     .map(|col| {
-                        let height = trees[row][col];
+                        let height = trees[row * cols + col];
                         let left = (0..col)
                             .enumerate()
                             .rev()
-                            .find(|(_, c)| trees[row][*c] >= height)
+                            .find(|(_, c)| trees[row * cols + *c] >= height)
                             .map_or(col, |(index, _)| col - index);
                         let up = (0..row)
                             .enumerate()
                             .rev()
-                            .find(|(_, r)| trees[*r][col] >= height)
+                            .find(|(_, r)| trees[*r * cols + col] >= height)
                             .map_or(row, |(index, _)| row - index);
                         let right = (col + 1..cols)
                             .enumerate()
-                            .find(|(_, c)| trees[row][*c] >= height)
+                            .find(|(_, c)| trees[row * cols + *c] >= height)
                             .map_or(cols - col - 1, |(index, _)| index + 1);
                         let down = (row + 1..rows)
                             .enumerate()
-                            .find(|(_i, r)| trees[*r][col] >= height)
+                            .find(|(_i, r)| trees[*r * cols + col] >= height)
                             .map_or(rows - row - 1, |(index, _)| index + 1);
                         left * up * right * down
                     })
@@ -64,13 +64,9 @@ impl Day for Day08 {
     }
 }
 
-fn parse(input: &str) -> Vec<Vec<usize>> {
+fn parse(input: &str) -> Vec<usize> {
     input
         .lines()
-        .map(|row| {
-            row.chars()
-                .map(|c| c.to_digit(10).unwrap() as usize)
-                .collect()
-        })
+        .flat_map(|row| row.chars().map(|c| c.to_digit(10).unwrap() as usize))
         .collect()
 }
