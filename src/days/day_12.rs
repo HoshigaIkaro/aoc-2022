@@ -37,7 +37,7 @@ impl Day for Day12 {
                     if !visited.insert(new_point) {
                         continue;
                     }
-                    
+
                     let current_dist = dist[&point];
 
                     dist.insert(new_point, current_dist + 1);
@@ -60,7 +60,7 @@ impl Day for Day12 {
 
         let board: Vec<usize> = chars.into_iter().map(char_to_height_reverse).collect();
 
-        let mut visited: HashSet<Point> = HashSet::new();
+        let mut visited: HashSet<Point> = std::iter::once(start_point).collect();
         let mut queue: VecDeque<Point> = std::iter::once(start_point).collect();
         let mut dist: HashMap<Point, usize> = std::iter::once((start_point, 0)).collect();
 
