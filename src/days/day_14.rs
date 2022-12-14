@@ -1,7 +1,5 @@
 use super::Day;
 
-type Point = (isize, isize);
-
 const WIDTH: usize = 1000;
 const HEIGHT: usize = 1000;
 
