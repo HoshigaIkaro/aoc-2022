@@ -16,7 +16,7 @@ impl Day for Day14 {
                 (x.parse::<isize>().unwrap(), y.parse::<isize>().unwrap())
             });
             let mut current = lines.next().unwrap();
-            while let Some(new) = lines.next() {
+            for new in lines {
                 depth = depth.max(new.1);
                 occupied.insert(current);
                 while current != new {
@@ -77,7 +77,7 @@ impl Day for Day14 {
                 (x.parse::<isize>().unwrap(), y.parse::<isize>().unwrap())
             });
             let mut current = lines.next().unwrap();
-            while let Some(new) = lines.next() {
+            for new in lines {
                 depth = depth.max(new.1);
                 occupied.insert(current);
                 while current != new {
