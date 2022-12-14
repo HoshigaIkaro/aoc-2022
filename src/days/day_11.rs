@@ -23,27 +23,22 @@ impl Op {
 
 #[derive(Debug, Clone)]
 struct Operation {
-    left: OpValue,
     op: Op,
     right: OpValue,
 }
 impl Operation {
-    fn new(left: OpValue, op: Op, right: OpValue) -> Self {
-        Self { left, op, right }
+    fn new(op: Op, right: OpValue) -> Self {
+        Self { op, right }
     }
 
     fn evaluate(&self, old: usize) -> usize {
-        let left = match self.left {
-            OpValue::Old => old,
-            OpValue::Lit(val) => val,
-        };
         let right = match self.right {
             OpValue::Old => old,
             OpValue::Lit(val) => val,
         };
         match self.op {
-            Op::Add => left + right,
-            Op::Mul => left * right,
+            Op::Add => old + right,
+            Op::Mul => old * right,
         }
     }
 }
@@ -165,21 +160,16 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
             let mut operation = lines
                 .next()
                 .unwrap()
-                .strip_prefix("  Operation: new = ")
+                .strip_prefix("  Operation: new = old ")
                 .unwrap()
                 .split_ascii_whitespace();
-            let left = operation
-                .next()
-                .unwrap()
-                .parse::<usize>()
-                .map_or(OpValue::Old, OpValue::Lit);
             let op = Op::new(operation.next().unwrap());
             let right = operation
                 .next()
                 .unwrap()
                 .parse::<usize>()
                 .map_or(OpValue::Old, OpValue::Lit);
-            let operation = Operation::new(left, op, right);
+            let operation = Operation::new(op, right);
 
             let divisor: usize = lines
                 .next()
