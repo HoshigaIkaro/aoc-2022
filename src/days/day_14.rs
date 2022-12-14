@@ -118,7 +118,6 @@ impl Day for Day14 {
                     current = new;
                     continue;
                 }
-                // println!("{current:?}");
                 // no moves left
                 if current == (500, 0) {
                     count += 1;
@@ -127,7 +126,6 @@ impl Day for Day14 {
                 occupied.insert(current);
                 break;
             }
-            // println!("||{current:?}");
             count += 1;
         }
         count.to_string()
