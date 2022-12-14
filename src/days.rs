@@ -28,12 +28,6 @@ pub use day_12::Day12;
 pub use day_13::Day13;
 pub use day_14::Day14;
 
-macro_rules! create_and_use_day {
-    ($day:literal) => {
-        
-    };
-}
-
 pub trait Day {
     fn part_1(&self, input: &str) -> String;
     fn part_2(&self, input: &str) -> String;

@@ -22,9 +22,10 @@ fn main() {
     println!(
         "{}",
         format!(
-            "Total time: {} µs or {} ms",
+            "Total time (including input and output):\n {} µs or {} ms",
             total.as_micros(),
             total.as_millis()
-        ).fg_rgb::<140, 170, 238>()
+        )
+        .fg_rgb::<140, 170, 238>()
     );
 }

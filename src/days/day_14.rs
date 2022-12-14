@@ -3,19 +3,38 @@ use super::Day;
 const WIDTH: usize = 1000;
 const HEIGHT: usize = 1000;
 
-struct Board(Vec<bool>);
+#[derive(Copy, Clone, PartialEq)]
+enum Tile {
+    Air,
+    Sand,
+    Rock,
+}
+
+struct Board {
+    grid: Vec<Tile>,
+    count: usize,
+}
 
 impl Board {
     fn new() -> Self {
-        Self(vec![false; WIDTH * HEIGHT])
+        Self {
+            grid: vec![Tile::Air; WIDTH * HEIGHT],
+            count: 0,
+        }
     }
 
     fn is_occupied(&self, (x, y): (usize, usize)) -> bool {
-        self.0[y * WIDTH + x]
+        let tile = self.grid[y * WIDTH + x];
+        tile == Tile::Rock || tile == Tile::Sand
     }
 
-    fn set(&mut self, (x, y): (usize, usize)) {
-        self.0[y * WIDTH + x] = true;
+    fn set_rock(&mut self, (x, y): (usize, usize)) {
+        self.grid[y * WIDTH + x] = Tile::Rock;
+    }
+
+    fn set_sand(&mut self, (x, y): (usize, usize)) {
+        self.count += 1;
+        self.grid[y * WIDTH + x] = Tile::Sand;
     }
 }
 
@@ -24,91 +43,79 @@ pub struct Day14;
 impl Day for Day14 {
     fn part_1(&self, input: &str) -> String {
         let (mut board, depth) = parse_input(input);
-        let mut count = 0;
-        'outer: loop {
-            let mut current = (500, 0);
-
-            loop {
-                // println!("{current:?}");
-                if current.1 >= depth {
-                    break 'outer;
-                }
-
-                // straight down;
-                let new = (current.0, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-
-                // lower left
-                let new = (current.0 - 1, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-
-                // lower right
-                let new = (current.0 + 1, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-
-                // no moves left
-                board.set(current);
+        let mut to_drop: Vec<(usize, usize)> = std::iter::once((500, 0)).collect();
+        while let Some(current) = to_drop.pop() {
+            if current.1 >= depth {
                 break;
             }
 
-            count += 1;
+            // straight down;
+            let new = (current.0, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            // lower left
+            let new = (current.0 - 1, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            // lower right
+            let new = (current.0 + 1, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            // no moves left
+            board.set_sand(current);
         }
-        count.to_string()
+        board.count.to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
         let (mut board, depth) = parse_input(input);
         let depth = depth + 2;
-        let mut count = 0;
-        'outer: loop {
-            let mut current = (500, 0);
-
-            loop {
-                if current.1 == depth - 1 {
-                    board.set(current);
-                    break;
-                }
-
-                // straight down;
-                let new = (current.0, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-
-                // lower left
-                let new = (current.0 - 1, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-
-                // lower right
-                let new = (current.0 + 1, current.1 + 1);
-                if !board.is_occupied(new) {
-                    current = new;
-                    continue;
-                }
-                // no moves left
-                if current == (500, 0) {
-                    count += 1;
-                    break 'outer;
-                }
-                board.set(current);
-                break;
+        let mut to_drop: Vec<(usize, usize)> = std::iter::once((500, 0)).collect();
+        while let Some(current) = to_drop.pop() {
+            if current.1 == depth - 1 {
+                board.set_sand(current);
+                continue;
             }
-            count += 1;
+
+            // straight down;
+            let new = (current.0, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            // lower left
+            let new = (current.0 - 1, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            // lower right
+            let new = (current.0 + 1, current.1 + 1);
+            if !board.is_occupied(new) {
+                to_drop.push(current);
+                to_drop.push(new);
+                continue;
+            }
+
+            board.set_sand(current);
         }
-        count.to_string()
+        board.count.to_string()
     }
 }
 
@@ -123,7 +130,7 @@ fn parse_input(input: &str) -> (Board, usize) {
         let mut current = lines.next().unwrap();
         for new in lines {
             depth = depth.max(new.1);
-            board.set(current);
+            board.set_rock(current);
             while current != new {
                 if current.0 < new.0 {
                     current.0 += 1;
@@ -135,7 +142,7 @@ fn parse_input(input: &str) -> (Board, usize) {
                 } else if current.1 > new.1 {
                     current.1 -= 1;
                 }
-                board.set(current);
+                board.set_rock(current);
             }
         }
     }
