@@ -21,30 +21,27 @@ impl Day for Day12 {
 
         let board: Vec<usize> = chars.into_iter().map(char_to_height).collect();
 
-        let mut visited: HashSet<Point> = HashSet::new();
+        let mut visited: HashSet<Point> = std::iter::once(start_point).collect();
         let mut queue: VecDeque<Point> = std::iter::once(start_point).collect();
         let mut dist: HashMap<Point, usize> = std::iter::once((start_point, 0)).collect();
 
         while let Some(point @ (x, y)) = queue.pop_front() {
-            if !visited.insert(point) {
-                continue;
-            }
-
             if point == end_point {
                 break;
             }
 
             let current_height = board[y * cols + x];
-            for new_point @ (x_n, y_n) in get_new_positions(point, rows, cols) {
+            for new_point @ (x_n, y_n) in get_new_positions(point, rows, cols) {                
                 let new_height = board[y_n * cols + x_n];
                 if new_height <= current_height + 1 {
+                    if !visited.insert(new_point) {
+                        continue;
+                    }
+                    
                     let current_dist = dist[&point];
 
-                    let new_dist = dist.get(&new_point).unwrap_or(&usize::MAX);
-                    if current_dist < *new_dist {
-                        dist.insert(new_point, current_dist + 1);
-                        queue.push_back(new_point);
-                    }
+                    dist.insert(new_point, current_dist + 1);
+                    queue.push_back(new_point);
                 }
             }
         }
@@ -68,10 +65,6 @@ impl Day for Day12 {
         let mut dist: HashMap<Point, usize> = std::iter::once((start_point, 0)).collect();
 
         while let Some(point @ (x, y)) = queue.pop_front() {
-            if !visited.insert(point) {
-                continue;
-            }
-
             let current_height = board[y * cols + x];
             if current_height == 25 {
                 return dist[&point].to_string();
@@ -80,13 +73,14 @@ impl Day for Day12 {
             for new_point @ (x_n, y_n) in get_new_positions(point, rows, cols) {
                 let new_height = board[y_n * cols + x_n];
                 if new_height <= current_height + 1 {
+                    if !visited.insert(new_point) {
+                        continue;
+                    }
+
                     let current_dist = dist[&point];
 
-                    let new_dist = dist.get(&new_point).unwrap_or(&usize::MAX);
-                    if current_dist < *new_dist {
-                        dist.insert(new_point, current_dist + 1);
-                        queue.push_back(new_point);
-                    }
+                    dist.insert(new_point, current_dist + 1);
+                    queue.push_back(new_point);
                 }
             }
         }
