@@ -8,6 +8,9 @@ name = "aoc"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.dev]
+opt-level = 1
+
 [[bench]]
 name = "complete"
 harness = false

@@ -4,29 +4,55 @@ use super::Day;
 
 type Point = (isize, isize);
 
+const WIDTH: usize = 1000;
+const HEIGHT: usize = 1000;
+
+struct Board([[bool; WIDTH]; HEIGHT]);
+
+impl Board {
+    fn new() -> Self {
+        Self([[false; WIDTH]; HEIGHT])
+    }
+
+    fn is_occupied(&self, (x, y): (usize, usize)) -> bool {
+        self.0[y][x]
+    }
+
+    fn set(&mut self, (x, y): (usize, usize)) {
+        self.0[y][x] = true;
+    }
+}
+
 pub struct Day14;
 
 impl Day for Day14 {
     fn part_1(&self, input: &str) -> String {
-        let mut occupied: HashSet<Point> = HashSet::new();
+        let mut board = Board::new();
         let mut depth = 0;
         for line in input.lines() {
             let mut lines = line.split(" -> ").map(|p| {
                 let (x, y) = p.split_once(',').unwrap();
-                (x.parse::<isize>().unwrap(), y.parse::<isize>().unwrap())
+                (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap())
             });
             let mut current = lines.next().unwrap();
             for new in lines {
                 depth = depth.max(new.1);
-                occupied.insert(current);
+                board.set(current);
                 while current != new {
-                    current.0 += (new.0 - current.0).signum();
-                    current.1 += (new.1 - current.1).signum();
-                    occupied.insert(current);
+                    if current.0 < new.0 {
+                        current.0 += 1;
+                    } else if current.0 > new.0 {
+                        current.0 -= 1;
+                    }
+                    if current.1 < new.1 {
+                        current.1 += 1;
+                    } else if current.1 > new.1 {
+                        current.1 -= 1;
+                    }
+                    board.set(current);
                 }
             }
         }
-
         let mut count = 0;
         'outer: loop {
             let mut current = (500, 0);
@@ -39,27 +65,27 @@ impl Day for Day14 {
 
                 // straight down;
                 let new = (current.0, current.1 + 1);
-                if !occupied.contains(&new) {
+                if !board.is_occupied(new) {
                     current = new;
                     continue;
                 }
 
                 // lower left
                 let new = (current.0 - 1, current.1 + 1);
-                if !occupied.contains(&new) {
+                if !board.is_occupied(new) {
                     current = new;
                     continue;
                 }
 
                 // lower right
                 let new = (current.0 + 1, current.1 + 1);
-                if !occupied.contains(&new) {
+                if !board.is_occupied(new) {
                     current = new;
                     continue;
                 }
 
                 // no moves left
-                occupied.insert(current);
+                board.set(current);
                 break;
             }
 
