@@ -33,13 +33,34 @@ impl Sensor {
     ///
     /// None is returned if the distance to the row is too far.
     /// The left and right bounds are inclusive.
+    /// If there is a possible beacon at an end, that end will be offset by one.
     fn h_interval(&self, y: isize) -> Option<(isize, isize)> {
-        if self.m_dist < y {
+        let sensor_y = self.position.1;
+        let delta_y = sensor_y.abs_diff(y) as isize;
+        if self.m_dist <= delta_y {
             return None;
         }
-        let width = self.m_dist - y;
+        let width = self.m_dist - delta_y;
         let x = self.position.0;
-        Some((x - width, x + width))
+        let (left, right) = (x - width, x + width);
+        // println!("{} {}", left, right);
+
+        let (beacon_x, beacon_y) = self.closest;
+        let interval = if beacon_y == y && left <= beacon_x && beacon_x <= right {
+            let beacon_left = beacon_x;
+            let beacon_right = beacon_x;
+
+            // beacon must be either left or right end
+            if beacon_left == left {
+                (left + 1, right)
+            } else {
+                (left, right - 1)
+            }
+        } else {
+            (left, right)
+        };
+        // println!("S: {:?} | {} {} {interval:?}", self.position, left, right);
+        Some(interval)
     }
 }
 
@@ -50,34 +71,37 @@ fn valid_spot(beacons: &[Sensor], point: Point) -> bool {
         .all(|beacon| beacon.dist(point) > beacon.m_dist)
 }
 
+fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
+    let mut intervals = intervals;
+    intervals.sort_unstable();
+
+    let mut merged = vec![intervals.remove(0)];
+    for new @ (new_left, new_right) in intervals.into_iter() {
+        let last @ (last_left, last_right) = merged.pop().unwrap();
+        // overlapping section
+        if last_left <= new_right && last_right >= new_left {
+            merged.push((last_left.min(new_left), last_right.max(new_right)));
+        } else {
+            merged.push(last);
+            merged.push(new);
+        }
+    }
+
+    merged
+}
+
 pub struct Day15;
 
 impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
-        let left_x = sensors
-            .iter()
-            .map(|b| b.position.0 - b.m_dist)
-            .min()
-            .unwrap();
-        let right_x = sensors
-            .iter()
-            .map(|b| b.position.0 + b.m_dist)
-            .max()
-            .unwrap();
-
-        let mut count = 0;
-        for x in left_x..=right_x {
-            let point = (x, 2_000_000);
-            for sensor in &sensors {
-                // beacon cannot be placed here
-                if sensor.dist(point) <= sensor.m_dist && sensor.closest != point {
-                    count += 1;
-                    break;
-                }
-            }
-        }
-        count.to_string()
+        let intervals: Vec<(isize, isize)> =
+            sensors.iter().filter_map(|s| s.h_interval(10)).collect();
+        merge_intervals(intervals)
+            .into_iter()
+            .map(|(left, right)| left.abs_diff(right + 1))
+            .sum::<usize>()
+            .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
@@ -155,6 +179,25 @@ mod day_15_tests {
         let point = (8, 7);
         let closest = (2, 10);
         let sensor = Sensor::new(point, closest);
-        assert_eq!(sensor.h_interval(0), Some((-1, 17)));
+        assert_eq!(sensor.h_interval(7), Some((-1, 17)));
+    }
+
+    #[test]
+    fn correct_interval_with_edge_beacon() {
+        let point = (0, 0);
+        let closest = (1, 4);
+        let sensor = Sensor::new(point, closest);
+        assert_eq!(sensor.h_interval(4), Some((-1, 0)));
+
+        let closest = (-1, 4);
+        let sensor = Sensor::new(point, closest);
+        assert_eq!(sensor.h_interval(4), Some((0, 1)));
+    }
+
+    #[test]
+    fn correct_interval_merging() {
+        let intervals = vec![(0, 10), (5, 12), (5, 20)];
+        let merged = merge_intervals(intervals);
+        assert_eq!(merged, vec![(0, 20)]);
     }
 }
