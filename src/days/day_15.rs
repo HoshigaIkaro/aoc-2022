@@ -103,7 +103,7 @@ impl Day for Day15 {
 
     fn part_2(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
-        
+
         let mut valid = (0, 0);
         for sensor in &sensors {
             let (x, y) = sensor.position;
@@ -113,7 +113,7 @@ impl Day for Day15 {
                 let delta = n_x - start_x;
                 let n_y = y + delta;
                 let point = (n_x, n_y);
-                if 0 <= n_y && n_y <= 4_000_000 && valid_spot(&sensors, point) {
+                if (0..=4_000_000).contains(&n_y) && valid_spot(&sensors, point) {
                     // println!("O:({x},{y}) D:{delta} {point:?}");
                     valid = point;
                     break;
