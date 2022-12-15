@@ -94,8 +94,10 @@ pub struct Day15;
 impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
-        let intervals: Vec<(isize, isize)> =
-            sensors.iter().filter_map(|s| s.h_interval(PART_ONE_ROW)).collect();
+        let intervals: Vec<(isize, isize)> = sensors
+            .iter()
+            .filter_map(|s| s.h_interval(PART_ONE_ROW))
+            .collect();
         merge_intervals(intervals)
             .into_iter()
             .map(|(left, right)| left.abs_diff(right + 1))
@@ -108,7 +110,7 @@ impl Day for Day15 {
 
         let (x, y) = sensors
             .iter()
-            .flat_map(|sensor| {
+            .find_map(|sensor| {
                 let (x, y) = sensor.position;
                 let start_x = (x - sensor.m_dist - 1).max(0);
                 let end_x = x.min(MAX_DISTANCE);
@@ -127,7 +129,6 @@ impl Day for Day15 {
                     valid
                 })
             })
-            .next()
             .unwrap();
         let tuning = x as i64 * 4_000_000 + y as i64;
         tuning.to_string()
