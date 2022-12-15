@@ -1,5 +1,8 @@
 use super::Day;
 
+const PART_ONE_ROW: isize = 2_000_000;
+const MAX_ABSOLUTE_DISTANCE: isize = 4_000_000;
+
 type Point = (isize, isize);
 
 struct Sensor {
@@ -92,7 +95,7 @@ impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
         let intervals: Vec<(isize, isize)> =
-            sensors.iter().filter_map(|s| s.h_interval(2_000_000)).collect();
+            sensors.iter().filter_map(|s| s.h_interval(PART_ONE_ROW)).collect();
         merge_intervals(intervals)
             .into_iter()
             .map(|(left, right)| left.abs_diff(right + 1))
@@ -108,13 +111,13 @@ impl Day for Day15 {
             .flat_map(|sensor| {
                 let (x, y) = sensor.position;
                 let start_x = (x - sensor.m_dist - 1).max(0);
-                let end_x = x.min(4_000_000);
+                let end_x = x.min(MAX_ABSOLUTE_DISTANCE);
                 (start_x..=end_x).find_map(|n_x| {
                     let mut valid = None;
                     let delta = n_x - start_x;
                     let n_y = y + delta;
                     let point = (n_x, n_y);
-                    if (0..=4_000_000).contains(&n_y)
+                    if (0..=MAX_ABSOLUTE_DISTANCE).contains(&n_y)
                         && valid_spot(&sensors, point)
                         && !valid_spot(&sensors, (n_x - 1, n_y))
                         && !valid_spot(&sensors, (n_x, n_y + 1))
