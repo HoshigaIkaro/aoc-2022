@@ -1,4 +1,4 @@
-use std::{collections::HashSet, time::Duration};
+use std::{cmp::Ordering, collections::HashSet};
 
 use super::Day;
 
@@ -138,15 +138,15 @@ fn parse_input(input: &str) -> (Board, usize) {
             depth = depth.max(new.1);
             board.set_rock(current);
             while current != new {
-                if current.0 < new.0 {
-                    current.0 += 1;
-                } else if current.0 > new.0 {
-                    current.0 -= 1;
+                match current.0.cmp(&new.0) {
+                    Ordering::Less => current.0 += 1,
+                    Ordering::Greater => current.0 -= 1,
+                    Ordering::Equal => (),
                 }
-                if current.1 < new.1 {
-                    current.1 += 1;
-                } else if current.1 > new.1 {
-                    current.1 -= 1;
+                match current.1.cmp(&new.1) {
+                    Ordering::Less => current.1 += 1,
+                    Ordering::Greater => current.1 -= 1,
+                    Ordering::Equal => (),
                 }
                 board.set_rock(current);
             }
