@@ -1,3 +1,5 @@
+use std::{collections::HashSet, time::Duration};
+
 use super::Day;
 
 const WIDTH: usize = 1000;
@@ -122,7 +124,11 @@ impl Day for Day14 {
 fn parse_input(input: &str) -> (Board, usize) {
     let mut board = Board::new();
     let mut depth = 0;
+    let mut done: HashSet<&str> = HashSet::new();
     for line in input.lines() {
+        if !done.insert(line) {
+            continue;
+        }
         let mut lines = line.split(" -> ").map(|p| {
             let (x, y) = p.split_once(',').unwrap();
             (x.parse::<usize>().unwrap(), y.parse::<usize>().unwrap())
