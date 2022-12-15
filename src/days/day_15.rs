@@ -3,8 +3,11 @@ use super::Day;
 type Point = (isize, isize);
 
 struct Sensor {
+    /// Sensor
     position: Point,
+    /// Beacon
     closest: Point,
+    /// Manhattan distance
     m_dist: isize,
 }
 
@@ -20,12 +23,14 @@ impl Sensor {
         }
     }
 
+    /// Gets the manhattan distance from the sensor to the point.
     fn dist(&self, (o_x, o_y): Point) -> isize {
         let m_dist = self.position.0.abs_diff(o_x) + self.position.1.abs_diff(o_y);
         m_dist as isize
     }
 }
 
+/// Returns true if no sensor can detect this point.
 fn valid_spot(beacons: &[Sensor], point: Point) -> bool {
     beacons
         .iter()
