@@ -43,7 +43,6 @@ impl Sensor {
         let width = self.m_dist - delta_y;
         let x = self.position.0;
         let (left, right) = (x - width, x + width);
-        // println!("{} {}", left, right);
 
         let (beacon_x, beacon_y) = self.closest;
         let interval = if beacon_y == y && left <= beacon_x && beacon_x <= right {
@@ -59,7 +58,6 @@ impl Sensor {
         } else {
             (left, right)
         };
-        // println!("S: {:?} | {} {} {interval:?}", self.position, left, right);
         Some(interval)
     }
 }
