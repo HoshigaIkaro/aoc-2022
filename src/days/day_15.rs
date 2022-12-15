@@ -28,6 +28,19 @@ impl Sensor {
         let m_dist = self.position.0.abs_diff(o_x) + self.position.1.abs_diff(o_y);
         m_dist as isize
     }
+
+    /// Gets the possible horizontal interval after moving `y` units up or down.
+    ///
+    /// None is returned if the distance to the row is too far.
+    /// The left and right bounds are inclusive.
+    fn h_interval(&self, y: isize) -> Option<(isize, isize)> {
+        if self.m_dist < y {
+            return None;
+        }
+        let width = self.m_dist - y;
+        let x = self.position.0;
+        Some((x - width, x + width))
+    }
 }
 
 /// Returns true if no sensor can detect this point.
@@ -135,5 +148,13 @@ mod day_15_tests {
         let closest = (2, 10);
         let sensor = Sensor::new(point, closest);
         assert_eq!(sensor.m_dist, 9);
+    }
+
+    #[test]
+    fn can_get_horizontal_interval() {
+        let point = (8, 7);
+        let closest = (2, 10);
+        let sensor = Sensor::new(point, closest);
+        assert_eq!(sensor.h_interval(0), Some((-1, 17)));
     }
 }
