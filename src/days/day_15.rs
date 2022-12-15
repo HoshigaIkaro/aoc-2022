@@ -104,23 +104,31 @@ impl Day for Day15 {
     fn part_2(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
 
-        let mut valid = (0, 0);
-        for sensor in &sensors {
-            let (x, y) = sensor.position;
-            let start_x = (x - sensor.m_dist - 1).max(0);
-            let end_x = x.min(4_000_000);
-            for n_x in start_x..=end_x {
-                let delta = n_x - start_x;
-                let n_y = y + delta;
-                let point = (n_x, n_y);
-                if (0..=4_000_000).contains(&n_y) && valid_spot(&sensors, point) {
-                    // println!("O:({x},{y}) D:{delta} {point:?}");
-                    valid = point;
-                    break;
-                }
-            }
-        }
-        let (x, y) = valid;
+        let (x, y) = sensors
+            .iter()
+            .flat_map(|sensor| {
+                let (x, y) = sensor.position;
+                let start_x = (x - sensor.m_dist - 1).max(0);
+                let end_x = x.min(4_000_000);
+                (start_x..=end_x).find_map(|n_x| {
+                    let mut valid = None;
+                    let delta = n_x - start_x;
+                    let n_y = y + delta;
+                    let point = (n_x, n_y);
+                    if (0..=4_000_000).contains(&n_y)
+                        && valid_spot(&sensors, point)
+                        && !valid_spot(&sensors, (n_x - 1, n_y))
+                        && !valid_spot(&sensors, (n_x, n_y + 1))
+                    {
+                        // println!("O:({x},{y}) D:{delta} {point:?}");
+
+                        valid = Some(point);
+                    }
+                    valid
+                })
+            })
+            .next()
+            .unwrap();
         let tuning = x as i64 * 4_000_000 + y as i64;
         tuning.to_string()
     }
