@@ -1,7 +1,7 @@
 use super::Day;
 
 const PART_ONE_ROW: isize = 2_000_000;
-const MAX_ABSOLUTE_DISTANCE: isize = 4_000_000;
+const MAX_DISTANCE: isize = 4_000_000;
 
 type Point = (isize, isize);
 
