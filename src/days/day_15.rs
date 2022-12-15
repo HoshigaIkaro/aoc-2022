@@ -120,8 +120,6 @@ impl Day for Day15 {
                         && !valid_spot(&sensors, (n_x - 1, n_y))
                         && !valid_spot(&sensors, (n_x, n_y + 1))
                     {
-                        // println!("O:({x},{y}) D:{delta} {point:?}");
-
                         valid = Some(point);
                     }
                     valid
