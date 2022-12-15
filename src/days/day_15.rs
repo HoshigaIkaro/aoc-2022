@@ -74,14 +74,14 @@ impl Day for Day15 {
         for one in &sensors {
             let (x, y) = one.position;
             let mut d_y = 0;
-            for n_x in x - one.m_dist - 1..x.min(4000000) {
+            for n_x in x - one.m_dist - 1..x.min(4_000_000) {
                 if n_x < 0 {
                     d_y += 1;
                     continue;
                 }
 
                 let point = (n_x, y + d_y);
-                if point.1 <= 4000000 && valid_spot(&sensors, point) {
+                if point.1 <= 4_000_000 && valid_spot(&sensors, point) {
                     valid = point;
                     break;
                 }
@@ -96,7 +96,7 @@ impl Day for Day15 {
             }
         }
         let (x, y) = valid;
-        let tuning = x as i64 * 4000000 + y as i64;
+        let tuning = x as i64 * 4_000_000 + y as i64;
         tuning.to_string()
     }
 }
@@ -130,7 +130,7 @@ mod day_15_tests {
     use super::*;
 
     #[test]
-    fn can_create_beacon() {
+    fn can_create_sensor() {
         let point = (8, 7);
         let closest = (2, 10);
         let sensor = Sensor::new(point, closest);
