@@ -33,7 +33,6 @@ impl Sensor {
     ///
     /// None is returned if the distance to the row is too far.
     /// The left and right bounds are inclusive.
-    /// If there is a possible beacon at an end, that end will be offset by one.
     fn h_interval(&self, y: isize) -> Option<(isize, isize)> {
         let sensor_y = self.position.1;
         let delta_y = sensor_y.abs_diff(y) as isize;
@@ -93,7 +92,7 @@ impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
         let intervals: Vec<(isize, isize)> =
-            sensors.iter().filter_map(|s| s.h_interval(10)).collect();
+            sensors.iter().filter_map(|s| s.h_interval(2_000_000)).collect();
         merge_intervals(intervals)
             .into_iter()
             .map(|(left, right)| left.abs_diff(right + 1))
