@@ -2,13 +2,13 @@ use super::Day;
 
 type Point = (isize, isize);
 
-struct Beacon {
+struct Sensor {
     position: Point,
     closest: Point,
     m_dist: isize,
 }
 
-impl Beacon {
+impl Sensor {
     fn new(position @ (p_x, p_y): Point, closest @ (c_x, c_y): Point) -> Self {
         let m_dist = p_x.abs_diff(c_x) + p_y.abs_diff(c_y);
         let m_dist = m_dist as isize;
@@ -25,7 +25,7 @@ impl Beacon {
     }
 }
 
-fn valid_spot(beacons: &[Beacon], point: Point) -> bool {
+fn valid_spot(beacons: &[Sensor], point: Point) -> bool {
     beacons
         .iter()
         .all(|beacon| beacon.dist(point) > beacon.m_dist)
@@ -35,13 +35,13 @@ pub struct Day15;
 
 impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
-        let beacons = parse_beacons(input);
-        let left_x = beacons
+        let sensors = parse_sensors(input);
+        let left_x = sensors
             .iter()
             .map(|b| b.position.0 - b.m_dist)
             .min()
             .unwrap();
-        let right_x = beacons
+        let right_x = sensors
             .iter()
             .map(|b| b.position.0 + b.m_dist)
             .max()
@@ -50,9 +50,9 @@ impl Day for Day15 {
         let mut count = 0;
         for x in left_x..=right_x {
             let point = (x, 2_000_000);
-            for beacon in &beacons {
+            for sensor in &sensors {
                 // beacon cannot be placed here
-                if beacon.dist(point) <= beacon.m_dist && beacon.closest != point {
+                if sensor.dist(point) <= sensor.m_dist && sensor.closest != point {
                     count += 1;
                     break;
                 }
@@ -62,10 +62,10 @@ impl Day for Day15 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let beacons = parse_beacons(input);
+        let sensors = parse_sensors(input);
 
         let mut valid = (0, 0);
-        for one in &beacons {
+        for one in &sensors {
             let (x, y) = one.position;
             let mut d_y = 0;
             for n_x in x - one.m_dist - 1..x.min(4000000) {
@@ -75,13 +75,13 @@ impl Day for Day15 {
                 }
 
                 let point = (n_x, y + d_y);
-                if point.1 <= 4000000 && valid_spot(&beacons, point) {
+                if point.1 <= 4000000 && valid_spot(&sensors, point) {
                     valid = point;
                     break;
                 }
 
                 let point = (n_x, y - d_y);
-                if point.1 >= 0 && valid_spot(&beacons, point) {
+                if point.1 >= 0 && valid_spot(&sensors, point) {
                     valid = point;
                     break;
                 }
@@ -95,7 +95,7 @@ impl Day for Day15 {
     }
 }
 
-fn parse_beacons(input: &str) -> Vec<Beacon> {
+fn parse_sensors(input: &str) -> Vec<Sensor> {
     input
         .lines()
         .map(|line| {
@@ -114,7 +114,7 @@ fn parse_beacons(input: &str) -> Vec<Beacon> {
                 closest.1.strip_prefix("y=").unwrap().parse().unwrap(),
             );
 
-            Beacon::new(sensor, closest)
+            Sensor::new(sensor, closest)
         })
         .collect()
 }
@@ -127,7 +127,7 @@ mod day_15_tests {
     fn can_create_beacon() {
         let point = (8, 7);
         let closest = (2, 10);
-        let beacon = Beacon::new(point, closest);
-        assert_eq!(beacon.m_dist, 9);
+        let sensor = Sensor::new(point, closest);
+        assert_eq!(sensor.m_dist, 9);
     }
 }
