@@ -111,13 +111,13 @@ impl Day for Day15 {
             .flat_map(|sensor| {
                 let (x, y) = sensor.position;
                 let start_x = (x - sensor.m_dist - 1).max(0);
-                let end_x = x.min(MAX_ABSOLUTE_DISTANCE);
+                let end_x = x.min(MAX_DISTANCE);
                 (start_x..=end_x).find_map(|n_x| {
                     let mut valid = None;
                     let delta = n_x - start_x;
                     let n_y = y + delta;
                     let point = (n_x, n_y);
-                    if (0..=MAX_ABSOLUTE_DISTANCE).contains(&n_y)
+                    if (0..=MAX_DISTANCE).contains(&n_y)
                         && valid_spot(&sensors, point)
                         && !valid_spot(&sensors, (n_x - 1, n_y))
                         && !valid_spot(&sensors, (n_x, n_y + 1))
