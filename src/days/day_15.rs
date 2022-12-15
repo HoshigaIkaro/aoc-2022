@@ -8,6 +8,7 @@ struct Sensor {
     m_dist: isize,
 }
 
+#[allow(clippy::cast_sign_loss)]
 impl Sensor {
     fn new(position @ (p_x, p_y): Point, closest @ (c_x, c_y): Point) -> Self {
         let m_dist = p_x.abs_diff(c_x) + p_y.abs_diff(c_y);
@@ -90,7 +91,7 @@ impl Day for Day15 {
             }
         }
         let (x, y) = valid;
-        let tuning = x as u64 * 4000000 + y as u64;
+        let tuning = x as i64 * 4000000 + y as i64;
         tuning.to_string()
     }
 }
