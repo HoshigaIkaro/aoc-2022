@@ -63,8 +63,6 @@ impl Day for Day15 {
 
     fn part_2(&self, input: &str) -> String {
         let beacons = parse_beacons(input);
-        let left = 0;
-        let right = 4_000_000;
 
         let mut valid = (0, 0);
         for one in &beacons {
