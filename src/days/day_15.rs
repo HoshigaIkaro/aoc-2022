@@ -47,7 +47,6 @@ impl Sensor {
         let (beacon_x, beacon_y) = self.closest;
         let interval = if beacon_y == y && left <= beacon_x && beacon_x <= right {
             let beacon_left = beacon_x;
-            let beacon_right = beacon_x;
 
             // beacon must be either left or right end
             if beacon_left == left {
