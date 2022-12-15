@@ -62,10 +62,10 @@ impl Sensor {
 }
 
 /// Returns true if no sensor can detect this point.
-fn valid_spot(beacons: &[Sensor], point: Point) -> bool {
-    beacons
+fn valid_spot(sensors: &[Sensor], point: Point) -> bool {
+    sensors
         .iter()
-        .all(|beacon| beacon.dist(point) > beacon.m_dist)
+        .all(|sensor| sensor.dist(point) > sensor.m_dist)
 }
 
 fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
@@ -103,30 +103,21 @@ impl Day for Day15 {
 
     fn part_2(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
-
+        
         let mut valid = (0, 0);
-        for one in &sensors {
-            let (x, y) = one.position;
-            let mut d_y = 0;
-            for n_x in x - one.m_dist - 1..x.min(4_000_000) {
-                if n_x < 0 {
-                    d_y += 1;
-                    continue;
-                }
-
-                let point = (n_x, y + d_y);
-                if point.1 <= 4_000_000 && valid_spot(&sensors, point) {
+        for sensor in &sensors {
+            let (x, y) = sensor.position;
+            let start_x = (x - sensor.m_dist - 1).max(0);
+            let end_x = x.min(4_000_000);
+            for n_x in start_x..=end_x {
+                let delta = n_x - start_x;
+                let n_y = y + delta;
+                let point = (n_x, n_y);
+                if 0 <= n_y && n_y <= 4_000_000 && valid_spot(&sensors, point) {
+                    // println!("O:({x},{y}) D:{delta} {point:?}");
                     valid = point;
                     break;
                 }
-
-                let point = (n_x, y - d_y);
-                if point.1 >= 0 && valid_spot(&sensors, point) {
-                    valid = point;
-                    break;
-                }
-
-                d_y += 1;
             }
         }
         let (x, y) = valid;
