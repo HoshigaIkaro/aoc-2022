@@ -2,6 +2,7 @@ use super::Day;
 
 pub struct Day02;
 
+#[allow(clippy::identity_op)]
 impl Day for Day02 {
     fn part_1(&self, input: &str) -> String {
         input
