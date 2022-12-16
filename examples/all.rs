@@ -5,7 +5,7 @@ use aoc::run_day;
 
 fn main() {
     let mut timings = Vec::new();
-    for day in 1..=14 {
+    for day in 1..=15 {
         let start = Instant::now();
         run_day(day);
         timings.push(start.elapsed());
