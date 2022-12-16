@@ -21,7 +21,7 @@ fn parse_valves(input: &str) -> HashMap<&str, Valve> {
         let connected = connected
             .trim_start_matches("tunnels lead to valve")
             .trim_start_matches("tunnel leads to valve")
-            .trim_start_matches("s")
+            .trim_start_matches('s')
             .trim_start();
         let flow_rate = flow_rate.parse().unwrap();
         let connected: Vec<&str> = connected.split(", ").collect();
@@ -61,7 +61,7 @@ fn get_reduced_map<'a>(valves: &HashMap<&'a str, Valve<'a>>) -> ReducedMap<'a> {
             }
             full.entry(source)
                 .or_default()
-                .insert(target, find_connection(source, target, &valves));
+                .insert(target, find_connection(source, target, valves));
         }
     }
     full
@@ -104,7 +104,7 @@ impl Day for Day16 {
         let valves = parse_valves(input);
         let basic_map = get_reduced_map(&valves);
         // dbg!(&basic_map["AA"]);
-        traverse(basic_map).to_string()
+        traverse(&basic_map).to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
@@ -182,7 +182,7 @@ impl<'a> Ord for State<'a> {
 /// Finds the path with the most pressure after 30 minutes and returns the value.
 ///
 /// Works only on the example input.
-fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
+fn traverse(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
     queue.push(State::new("AA", &valves));
 
