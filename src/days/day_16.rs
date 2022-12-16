@@ -12,27 +12,6 @@ struct Valve<'a> {
     open: bool,
 }
 
-#[derive(Debug)]
-struct Connection {
-    flow_rate: usize,
-    distance: usize,
-}
-type ReducedMap<'a> = HashMap<&'a str, HashMap<&'a str, Connection>>;
-pub struct Day16;
-
-impl Day for Day16 {
-    fn part_1(&self, input: &str) -> String {
-        let valves = parse_valves(input);
-        let basic_map = get_reduced_map(&valves);
-        // dbg!(&basic_map["AA"]);
-        traverse(basic_map).to_string()
-    }
-
-    fn part_2(&self, input: &str) -> String {
-        todo!()
-    }
-}
-
 fn parse_valves(input: &str) -> HashMap<&str, Valve> {
     let mut valves = HashMap::new();
     for line in input.lines() {
@@ -55,6 +34,13 @@ fn parse_valves(input: &str) -> HashMap<&str, Valve> {
     }
     valves
 }
+
+#[derive(Debug)]
+struct Connection {
+    flow_rate: usize,
+    distance: usize,
+}
+type ReducedMap<'a> = HashMap<&'a str, HashMap<&'a str, Connection>>;
 
 /// Calculates the distance from each non-zero valve to another.
 ///
@@ -80,6 +66,7 @@ fn get_reduced_map<'a>(valves: &HashMap<&'a str, Valve<'a>>) -> ReducedMap<'a> {
     }
     full
 }
+
 
 /// Finds the connection from `source` to `target` in the `values` map.
 ///
@@ -108,6 +95,21 @@ fn find_connection<'a>(
     Connection {
         flow_rate: valves[&target].flow_rate,
         distance: distance[&target],
+    }
+}
+
+pub struct Day16;
+
+impl Day for Day16 {
+    fn part_1(&self, input: &str) -> String {
+        let valves = parse_valves(input);
+        let basic_map = get_reduced_map(&valves);
+        // dbg!(&basic_map["AA"]);
+        traverse(basic_map).to_string()
+    }
+
+    fn part_2(&self, input: &str) -> String {
+        todo!()
     }
 }
 
