@@ -67,7 +67,6 @@ fn get_reduced_map<'a>(valves: &HashMap<&'a str, Valve<'a>>) -> ReducedMap<'a> {
     full
 }
 
-
 /// Finds the connection from `source` to `target` in the `values` map.
 ///
 /// The current implementation searches breadth first with a `VecDeque`.
@@ -132,6 +131,31 @@ impl<'a> State<'a> {
             opened_valves: Vec::new(),
         }
     }
+
+    fn calculate_final_pressure(&self) -> usize {
+        self.pressure + self.flow_rate * (30 - self.elapsed_minutes)
+    }
+
+    /// Calculates the score used in pruning.
+    ///
+    /// The score is the sum of
+    ///
+    /// - the current pressure
+    /// - the pressure gained from the current flow rate
+    /// - the pressure gained from all remaining points
+    ///
+    /// during the remaining minutes.
+    fn calculate_score(&self, valves: &ReducedMap) -> usize {
+        let minutes_left = 30 - self.elapsed_minutes;
+        self.pressure
+            + minutes_left * self.flow_rate
+            + minutes_left
+                * valves[self.current_valve]
+                    .iter()
+                    .filter(|(valve, _)| !self.opened_valves.contains(valve))
+                    .map(|(_, conn)| conn.flow_rate)
+                    .sum::<usize>()
+    }
 }
 
 impl<'a> PartialOrd for State<'a> {
@@ -142,8 +166,8 @@ impl<'a> PartialOrd for State<'a> {
 
 impl<'a> Ord for State<'a> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let left = self.pressure + self.flow_rate * (30 - self.elapsed_minutes);
-        let right = other.pressure + other.flow_rate * (30 - other.elapsed_minutes);
+        let left = self.calculate_final_pressure();
+        let right = other.calculate_final_pressure();
         left.cmp(&right)
     }
 }
@@ -159,11 +183,16 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
     let mut best = 0;
     let mut best_state = State::default();
     while let Some(state) = queue.pop() {
+        // prune if worse score
+        if state.calculate_score(&valves) < best {
+            continue;
+        }
+
         // movement unavailable
         if state.opened_valves.len() == max_valves || state.elapsed_minutes == 30 {
-            let pressure = state.pressure + state.flow_rate * (30 - state.elapsed_minutes);
-            if pressure > best {
-                best = pressure;
+            let score = state.calculate_score(&valves);
+            if score > best {
+                best = score;
                 best_state = state;
             }
             continue;
@@ -197,59 +226,7 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             queue.push(state);
         }
     }
-    dbg!(&best_state);
     best_state.pressure + best_state.flow_rate * (30 - best_state.elapsed_minutes)
-}
-
-fn traverse_alpha<'a>(
-    valves: &mut HashMap<&'a str, Valve<'a>>,
-    full: &HashMap<&'a str, HashMap<&str, Connection>>,
-    mut open: HashSet<&'a str>,
-    current: &'a str,
-    mut pressure: usize,
-    mut total_flow: usize,
-    mut minutes: usize,
-) -> usize {
-    // println!("{}", current);
-    pressure += total_flow;
-    if open.len() == 0 {
-        // dbg!(minutes);
-        let remaining_minutes = 30 - minutes;
-        pressure + total_flow * remaining_minutes.saturating_sub(1)
-    } else {
-        let max_distance = open
-            .iter()
-            .filter(|c| full[current][*c].distance + minutes <= 30)
-            .map(|op| full[current][op].distance)
-            .max()
-            .unwrap();
-        let best = open
-            .iter()
-            .max_by_key(|c| {
-                let conn = &full[current][*c];
-                let mut pressure = 0;
-                // move to place
-                pressure += total_flow * conn.distance;
-                // turn the valve
-                pressure += total_flow;
-                // finish waiting
-                pressure += (total_flow + conn.flow_rate) * (max_distance + 1 - conn.distance + 1);
-                pressure
-            })
-            .unwrap();
-        dbg!(best);
-        let conn = &full[current][*best];
-        if conn.distance + minutes >= 30 {
-            dbg!('a');
-        }
-        minutes += conn.distance + 1;
-        pressure += total_flow * conn.distance;
-        total_flow += conn.flow_rate;
-        let mut open = open.clone();
-        open.remove(best);
-
-        traverse_alpha(valves, full, open, best, pressure, total_flow, minutes)
-    }
 }
 
 #[cfg(test)]
