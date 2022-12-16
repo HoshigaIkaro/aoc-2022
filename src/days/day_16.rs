@@ -173,6 +173,9 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             let mut state = state.clone();
             let connection = &valves[state.current_valve][possible];
             if state.elapsed_minutes + connection.distance > 30 {
+                state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
+                state.elapsed_minutes = 30;
+                queue.push(state);
                 continue;
             }
             // move to the new valve
