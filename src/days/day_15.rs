@@ -75,7 +75,7 @@ fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
     intervals.sort_unstable();
 
     let mut merged = vec![intervals.remove(0)];
-    for new @ (new_left, new_right) in intervals.into_iter() {
+    for new @ (new_left, new_right) in intervals {
         let last @ (last_left, last_right) = merged.pop().unwrap();
         // overlapping section
         if last_left <= new_right && last_right >= new_left {
@@ -87,6 +87,12 @@ fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
     }
 
     merged
+}
+
+#[derive(Debug, PartialEq)]
+struct Line {
+    slope: isize,
+    y_intercept: isize,
 }
 
 pub struct Day15;
@@ -108,30 +114,62 @@ impl Day for Day15 {
     fn part_2(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
 
-        let (x, y) = sensors
-            .iter()
-            .find_map(|sensor| {
-                let (x, y) = sensor.position;
-                let start_x = (x - sensor.m_dist - 1).max(0);
-                let end_x = x.min(MAX_DISTANCE);
-                (start_x..=end_x).find_map(|n_x| {
-                    let mut valid = None;
-                    let delta = n_x - start_x;
-                    let n_y = y + delta;
-                    let point = (n_x, n_y);
-                    if (0..=MAX_DISTANCE).contains(&n_y)
-                        && valid_spot(&sensors, point)
-                        && !valid_spot(&sensors, (n_x - 1, n_y))
-                        && !valid_spot(&sensors, (n_x, n_y + 1))
-                    {
-                        valid = Some(point);
+        let mut positives: Vec<Line> = Vec::new();
+        let mut negatives: Vec<Line> = Vec::new();
+        for one in &sensors {
+            for two in &sensors {
+                if one.dist(two.position) == one.m_dist + two.m_dist + 2 {
+                    // println!("{:?} {:?}", one.position, two.position);
+                    let (x_1, y_1) = one.position;
+                    let (x_2, y_2) = two.position;
+
+                    let delta_y = y_2 - y_1;
+                    let delta_x = x_2 - x_1;
+                    let slope = -delta_y.signum() * delta_x.signum();
+                    let center_y_intercept = y_1 - slope * x_1;
+                    let delta_y_intercept = slope.signum() * (one.m_dist + 1);
+                    let y_intercept = center_y_intercept + delta_y_intercept;
+
+                    let line = Line { slope, y_intercept };
+                    match slope.signum() {
+                        1 => positives.push(line),
+                        -1 => negatives.push(line),
+                        _ => unreachable!(),
                     }
-                    valid
-                })
-            })
-            .unwrap();
-        let tuning = x as i64 * 4_000_000 + y as i64;
-        tuning.to_string()
+                }
+            }
+        }
+
+        for one in positives {
+            let b_p = one.y_intercept;
+            for Line {
+                slope,
+                y_intercept: b_n,
+            } in &negatives
+            {
+                // let b be the y-intercept
+                // y_p = x + b_p
+                // y_n = -x + b_n
+                // y_p = y_n -> x + b_p = -x + b_n
+                // 2x = b_n - b_p -> x = (b_n - b_p) / 2
+                let x = (b_n - b_p) / 2;
+
+                if !(0..=MAX_DISTANCE).contains(&x) {
+                    continue;
+                }
+                let y = slope * x + b_n;
+                if !(0..=MAX_DISTANCE).contains(&y) {
+                    continue;
+                }
+                
+                let point = (x, y);
+                if valid_spot(&sensors, point) {
+                    let tuning = x as i64 * 4_000_000 + y as i64;
+                    return tuning.to_string();
+                }
+            }
+        }
+        todo!()
     }
 }
 
