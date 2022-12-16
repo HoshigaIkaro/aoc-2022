@@ -187,18 +187,15 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
     queue.push(State::new("AA", &valves));
 
     let mut best = 0;
+    let mut best_array = [0; 31];
     let mut best_state = State::default();
     while let Some(state) = queue.pop() {
-        let score = state.calculate_score(&valves);
-        // prune if worse score
-        if score < best {
-            continue;
-        }
-
         // movement unavailable
         if state.remaining.is_empty() || state.elapsed_minutes == 30 {
+            let score = state.calculate_score(&valves);
             if score > best {
                 best = score;
+                best_array[state.elapsed_minutes] = score;
                 best_state = state;
             }
             continue;
@@ -210,7 +207,12 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             if state.elapsed_minutes + connection.distance > 30 {
                 state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
                 state.elapsed_minutes = 30;
-                queue.push(state);
+                let best = best_array.get_mut(state.elapsed_minutes).unwrap();
+                let score = state.calculate_score(&valves);
+                if score >= *best {
+                    *best = (*best).max(score);
+                    queue.push(state);
+                }
                 continue;
             }
             // move to the new valve
@@ -218,7 +220,12 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             state.elapsed_minutes += connection.distance;
             state.pressure += state.flow_rate * connection.distance;
             if state.elapsed_minutes == 30 {
-                queue.push(state);
+                let best = best_array.get_mut(state.elapsed_minutes).unwrap();
+                let score = state.calculate_score(&valves);
+                if score >= *best {
+                    *best = (*best).max(score);
+                    queue.push(state);
+                }
                 continue;
             }
             // turn the valve
@@ -226,8 +233,12 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             state.pressure += state.flow_rate;
             state.remaining.remove(i);
             state.flow_rate += connection.flow_rate;
-
-            queue.push(state);
+            let best = best_array.get_mut(state.elapsed_minutes).unwrap();
+            let score = state.calculate_score(&valves);
+            if score >= *best {
+                *best = (*best).max(score);
+                queue.push(state);
+            }
         }
     }
     best_state.pressure + best_state.flow_rate * (30 - best_state.elapsed_minutes)
