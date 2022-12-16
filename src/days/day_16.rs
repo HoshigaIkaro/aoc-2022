@@ -118,17 +118,23 @@ struct State<'a> {
     elapsed_minutes: usize,
     pressure: usize,
     flow_rate: usize,
-    opened_valves: Vec<&'a str>,
+    remaining: Vec<&'a str>,
 }
 
 impl<'a> State<'a> {
-    fn new(current: &'a str) -> Self {
+    fn new(current: &'a str, valves: &'a ReducedMap) -> Self {
+        let remaining = valves
+            .keys()
+            .copied()
+            .filter(|v| *v != "AA" && *v != current)
+            .collect();
+        // dbg!(&remaining, current);
         Self {
             current_valve: current,
             elapsed_minutes: 0,
             pressure: 0,
             flow_rate: 0,
-            opened_valves: Vec::new(),
+            remaining,
         }
     }
 
@@ -150,10 +156,11 @@ impl<'a> State<'a> {
         self.pressure
             + minutes_left * self.flow_rate
             + minutes_left
-                * valves[self.current_valve]
+                * self
+                    .remaining
                     .iter()
-                    .filter(|(valve, _)| !self.opened_valves.contains(valve))
-                    .map(|(_, conn)| conn.flow_rate)
+                    .filter(|v| **v != self.current_valve)
+                    .map(|valve| valves[self.current_valve][valve].flow_rate)
                     .sum::<usize>()
     }
 }
@@ -176,21 +183,20 @@ impl<'a> Ord for State<'a> {
 ///
 /// Works only on the example input.
 fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
-    let max_valves = valves.len() - 1; // remove count for "AA"
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
-    queue.push(State::new("AA"));
+    queue.push(State::new("AA", &valves));
 
     let mut best = 0;
     let mut best_state = State::default();
     while let Some(state) = queue.pop() {
+        let score = state.calculate_score(&valves);
         // prune if worse score
-        if state.calculate_score(&valves) < best {
+        if score < best {
             continue;
         }
 
         // movement unavailable
-        if state.opened_valves.len() == max_valves || state.elapsed_minutes == 30 {
-            let score = state.calculate_score(&valves);
+        if state.remaining.is_empty() || state.elapsed_minutes == 30 {
             if score > best {
                 best = score;
                 best_state = state;
@@ -198,9 +204,7 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             continue;
         }
 
-        for &possible in valves.keys().filter(|new| {
-            !state.opened_valves.contains(*new) && **new != "AA" && **new != state.current_valve
-        }) {
+        for (i, possible) in state.remaining.iter().enumerate() {
             let mut state = state.clone();
             let connection = &valves[state.current_valve][possible];
             if state.elapsed_minutes + connection.distance > 30 {
@@ -220,7 +224,7 @@ fn traverse<'a>(valves: ReducedMap<'a>) -> usize {
             // turn the valve
             state.elapsed_minutes += 1;
             state.pressure += state.flow_rate;
-            state.opened_valves.push(possible);
+            state.remaining.remove(i);
             state.flow_rate += connection.flow_rate;
 
             queue.push(state);
