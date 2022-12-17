@@ -183,7 +183,7 @@ impl<'a> Ord for StateSingle<'a> {
 
 /// Finds the path with the most pressure after 30 minutes and returns the value.
 ///
-/// Works only on the example input.
+/// Does not work on the example input.
 fn traverse_single(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<StateSingle> = BinaryHeap::new();
     queue.push(StateSingle::new("AA", &valves));
@@ -243,7 +243,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             }
         }
     }
-    best_state.pressure + best_state.flow_rate * (30 - best_state.elapsed_minutes)
+    best_state.calculate_final_pressure()
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
@@ -321,7 +321,7 @@ impl<'a> Ord for StateDouble<'a> {
 
 /// Finds the path with the most pressure after 30 minutes and returns the value.
 ///
-/// Works only on the example input.
+/// Does not work on the example input
 fn traverse_double(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<StateDouble> = BinaryHeap::new();
     queue.push(StateDouble::new("AA", "AA", &valves));
