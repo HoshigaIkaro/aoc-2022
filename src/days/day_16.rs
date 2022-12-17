@@ -186,7 +186,7 @@ impl<'a> Ord for StateSingle<'a> {
 /// Does not work on the example input.
 fn traverse_single(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<StateSingle> = BinaryHeap::new();
-    queue.push(StateSingle::new("AA", &valves));
+    queue.push(StateSingle::new("AA", valves));
 
     let mut best = 0;
     let mut best_array = [0; 31];
@@ -194,7 +194,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
     while let Some(state) = queue.pop() {
         // movement unavailable
         if state.remaining.is_empty() || state.elapsed_minutes == 30 {
-            let score = state.calculate_score(&valves);
+            let score = state.calculate_score(valves);
             if score > best {
                 best = score;
                 best_array[state.elapsed_minutes] = score;
@@ -210,7 +210,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
                 state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
                 state.elapsed_minutes = 30;
                 let best = best_array.get_mut(state.elapsed_minutes).unwrap();
-                let score = state.calculate_score(&valves);
+                let score = state.calculate_score(valves);
                 if score >= *best {
                     *best = (*best).max(score);
                     queue.push(state);
@@ -223,7 +223,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             state.pressure += state.flow_rate * connection.distance;
             if state.elapsed_minutes == 30 {
                 let best = best_array.get_mut(state.elapsed_minutes).unwrap();
-                let score = state.calculate_score(&valves);
+                let score = state.calculate_score(valves);
                 if score >= *best {
                     *best = (*best).max(score);
                     queue.push(state);
@@ -236,7 +236,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             state.remaining.remove(i);
             state.flow_rate += connection.flow_rate;
             let best = best_array.get_mut(state.elapsed_minutes).unwrap();
-            let score = state.calculate_score(&valves);
+            let score = state.calculate_score(valves);
             if score >= *best {
                 *best = (*best).max(score);
                 queue.push(state);
@@ -324,7 +324,7 @@ impl<'a> Ord for StateDouble<'a> {
 /// Does not work on the example input
 fn traverse_double(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<StateDouble> = BinaryHeap::new();
-    queue.push(StateDouble::new("AA", "AA", &valves));
+    queue.push(StateDouble::new("AA", "AA", valves));
     // dbg!(&valves["MQ"]);
     let mut best = 0;
     let mut best_state = StateDouble::default();
