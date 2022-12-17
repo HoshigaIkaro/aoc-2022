@@ -188,18 +188,17 @@ fn traverse_single(valves: &ReducedMap) -> usize {
     let mut queue: BinaryHeap<StateSingle> = BinaryHeap::new();
     queue.push(StateSingle::new("AA", valves));
 
-    let mut best = 0;
+    let mut best_final = 0;
     let mut best_array = [0; 31];
-    let mut best_state = StateSingle::default();
-    while let Some(state) = queue.pop() {
+    while let Some(mut state) = queue.pop() {
+        if state.remaining.is_empty() {
+            state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
+            state.elapsed_minutes = 30;
+        }
         // movement unavailable
-        if state.remaining.is_empty() || state.elapsed_minutes == 30 {
-            let score = state.calculate_score(valves);
-            if score > best {
-                best = score;
-                best_array[state.elapsed_minutes] = score;
-                best_state = state;
-            }
+        if state.elapsed_minutes == 30 {
+            let score = state.calculate_final_pressure();
+            best_final = best_final.max(score);
             continue;
         }
 
@@ -243,7 +242,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             }
         }
     }
-    best_state.calculate_final_pressure()
+    best_final
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
