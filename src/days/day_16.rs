@@ -190,7 +190,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
 
     let mut best_final = 0;
     let mut best_array = [0; 31];
-    while let Some(mut state) = queue.pop() {
+    while let Some(state) = queue.pop() {
         // movement unavailable
         if state.remaining.is_empty() || state.elapsed_minutes == 30 {
             let score = state.calculate_final_pressure();
@@ -198,17 +198,21 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             continue;
         }
 
+        let mut checked = false;
         for (i, possible) in state.remaining.iter().enumerate() {
             let mut state = state.clone();
             let connection = &valves[state.current_valve][possible];
-            if state.elapsed_minutes + connection.distance > 30 {
-                state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
-                state.elapsed_minutes = 30;
-                let best = best_array.get_mut(state.elapsed_minutes).unwrap();
-                let score = state.calculate_score(valves);
-                if score >= *best {
-                    *best = (*best).max(score);
-                    queue.push(state);
+            if state.elapsed_minutes + connection.distance >= 30 {
+                if !checked {
+                    state.pressure = state.calculate_final_pressure();
+                    state.elapsed_minutes = 30;
+                    let best = best_array.get_mut(state.elapsed_minutes).unwrap();
+                    let score = state.calculate_final_pressure();
+                    if score >= *best {
+                        *best = (*best).max(score);
+                        queue.push(state);
+                    }
+                    checked = true;
                 }
                 continue;
             }
@@ -216,15 +220,13 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             state.current_valve = possible;
             state.elapsed_minutes += connection.distance;
             state.pressure += state.flow_rate * connection.distance;
-            if state.elapsed_minutes == 30 {
-                queue.push(state);
-                continue;
-            }
+
             // turn the valve
             state.elapsed_minutes += 1;
             state.pressure += state.flow_rate;
             state.remaining.remove(i);
             state.flow_rate += connection.flow_rate;
+
             let best = best_array.get_mut(state.elapsed_minutes).unwrap();
             let score = state.calculate_score(valves);
             if score >= *best {
