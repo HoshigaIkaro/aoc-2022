@@ -164,14 +164,16 @@ impl Chamber {
 
     /// Checks the three rows underneath the height
     fn new_floor_level(&self) -> Option<usize> {
-        (self.height.saturating_sub(3)..self.height)
+        (self.height.saturating_sub(4)..self.height)
             .find(|&y| (0..7).all(|x| self.is_occupied((x, y))))
     }
 
     fn remove_until_new_floor(&mut self, new_floor: usize) {
         self.height_before_floor += new_floor;
-        self.grid = self.grid.split_off((new_floor + 1) * 7);
-        self.height -= new_floor + 1;
+        self.grid = self.grid.split_off(new_floor * 7);
+        // change view
+        self.height -= new_floor;
+        self.rock.y -= new_floor;
     }
 
     fn total_height(&self) -> usize {
@@ -218,7 +220,11 @@ impl Day for Day17 {
             if chamber.move_down() {
                 count += 1;
             }
-            }
+            // if let Some(new_floor) = chamber.new_floor_level() {
+            //     chamber.remove_until_new_floor(new_floor);
+            // }
+        }
+        // chamber.total_height().to_string()
         chamber.height.to_string()
     }
 
@@ -295,17 +301,21 @@ mod day_17_tests {
     #[test]
     fn chamber_new_floor() {
         let mut chamber = Chamber::new();
-        chamber.grid = vec![vec![Tile::Air; 7], vec![Tile::Rock; 7], vec![Tile::Rock; 5]]
+        chamber.grid = vec![vec![Tile::Air; 7], vec![Tile::Rock; 7]]
             .into_iter()
             .flatten()
             .collect();
-
+        chamber.rock.y = 4;
         chamber.height = 3;
         let new_floor = chamber.new_floor_level().unwrap();
+        println!("{chamber}");
         chamber.remove_until_new_floor(new_floor);
+        println!("{chamber}");
         // height of 1 below the floor
-        assert_eq!(chamber.height_before_floor, 2);
-        assert_eq!(chamber.height, 1);
-        assert_eq!(chamber.grid, vec![Tile::Rock; 5]);
+        assert_eq!(chamber.height_before_floor, 1);
+        assert_eq!(chamber.height, 2);
+        assert_eq!(chamber.grid, vec![Tile::Rock; 7]);
+        assert_eq!(chamber.total_height(), 3);
+        assert_eq!(chamber.rock.y, 3);
     }
 }
