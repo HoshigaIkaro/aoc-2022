@@ -191,12 +191,8 @@ fn traverse_single(valves: &ReducedMap) -> usize {
     let mut best_final = 0;
     let mut best_array = [0; 31];
     while let Some(mut state) = queue.pop() {
-        if state.remaining.is_empty() {
-            state.pressure += state.flow_rate * (30 - state.elapsed_minutes);
-            state.elapsed_minutes = 30;
-        }
         // movement unavailable
-        if state.elapsed_minutes == 30 {
+        if state.remaining.is_empty() || state.elapsed_minutes == 30 {
             let score = state.calculate_final_pressure();
             best_final = best_final.max(score);
             continue;
@@ -221,12 +217,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             state.elapsed_minutes += connection.distance;
             state.pressure += state.flow_rate * connection.distance;
             if state.elapsed_minutes == 30 {
-                let best = best_array.get_mut(state.elapsed_minutes).unwrap();
-                let score = state.calculate_score(valves);
-                if score >= *best {
-                    *best = (*best).max(score);
-                    queue.push(state);
-                }
+                queue.push(state);
                 continue;
             }
             // turn the valve
