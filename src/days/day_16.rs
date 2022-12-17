@@ -104,16 +104,18 @@ impl Day for Day16 {
         let valves = parse_valves(input);
         let basic_map = get_reduced_map(&valves);
         // dbg!(&basic_map["AA"]);
-        traverse(&basic_map).to_string()
+        traverse_single(&basic_map).to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
-        todo!()
+        let valves = parse_valves(input);
+        let basic_map = get_reduced_map(&valves);
+        traverse_double(&basic_map).to_string()
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
-struct State<'a> {
+struct StateSingle<'a> {
     current_valve: &'a str,
     elapsed_minutes: usize,
     pressure: usize,
@@ -121,7 +123,7 @@ struct State<'a> {
     remaining: Vec<&'a str>,
 }
 
-impl<'a> State<'a> {
+impl<'a> StateSingle<'a> {
     fn new(current: &'a str, valves: &'a ReducedMap) -> Self {
         let remaining = valves
             .keys()
@@ -165,13 +167,13 @@ impl<'a> State<'a> {
     }
 }
 
-impl<'a> PartialOrd for State<'a> {
+impl<'a> PartialOrd for StateSingle<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<'a> Ord for State<'a> {
+impl<'a> Ord for StateSingle<'a> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         let left = self.calculate_final_pressure();
         let right = other.calculate_final_pressure();
@@ -182,13 +184,13 @@ impl<'a> Ord for State<'a> {
 /// Finds the path with the most pressure after 30 minutes and returns the value.
 ///
 /// Works only on the example input.
-fn traverse(valves: &ReducedMap) -> usize {
-    let mut queue: BinaryHeap<State> = BinaryHeap::new();
-    queue.push(State::new("AA", &valves));
+fn traverse_single(valves: &ReducedMap) -> usize {
+    let mut queue: BinaryHeap<StateSingle> = BinaryHeap::new();
+    queue.push(StateSingle::new("AA", &valves));
 
     let mut best = 0;
     let mut best_array = [0; 31];
-    let mut best_state = State::default();
+    let mut best_state = StateSingle::default();
     while let Some(state) = queue.pop() {
         // movement unavailable
         if state.remaining.is_empty() || state.elapsed_minutes == 30 {
@@ -242,6 +244,170 @@ fn traverse(valves: &ReducedMap) -> usize {
         }
     }
     best_state.pressure + best_state.flow_rate * (30 - best_state.elapsed_minutes)
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Default)]
+struct StateDouble<'a> {
+    person_valve: &'a str,
+    elephant_valve: &'a str,
+    person_elapsed_minutes: usize,
+    elephant_elapsed_minutes: usize,
+    pressure: usize,
+    person_flow_rate: usize,
+    elephant_flow_rate: usize,
+    remaining: Vec<&'a str>,
+}
+
+impl<'a> StateDouble<'a> {
+    fn new(person_valve: &'a str, elephant_valve: &'a str, valves: &'a ReducedMap) -> Self {
+        let remaining = valves
+            .keys()
+            .copied()
+            .filter(|v| *v != "AA" && *v != person_valve && *v != elephant_valve)
+            .collect();
+        // dbg!(&remaining, current);
+        Self {
+            person_valve,
+            elephant_valve,
+            person_elapsed_minutes: 4,
+            elephant_elapsed_minutes: 4,
+            pressure: 0,
+            person_flow_rate: 0,
+            elephant_flow_rate: 0,
+            remaining,
+        }
+    }
+
+    fn calculate_final_pressure(&self) -> usize {
+        self.pressure + self.person_flow_rate * (30 - self.person_elapsed_minutes)
+    }
+
+    /// Calculates the score used in pruning.
+    ///
+    /// The score is the sum of
+    ///
+    /// - the current pressure
+    /// - the pressure gained from the current flow rate
+    /// - the pressure gained from all remaining points
+    ///
+    /// during the remaining minutes.
+    fn calculate_score(&self, valves: &ReducedMap) -> usize {
+        let minutes_left = 30 - self.person_elapsed_minutes;
+        self.pressure
+            + minutes_left * self.person_flow_rate
+            + minutes_left
+                * self
+                    .remaining
+                    .iter()
+                    .filter(|v| **v != self.person_valve)
+                    .map(|valve| valves[self.person_valve][valve].flow_rate)
+                    .sum::<usize>()
+    }
+}
+
+impl<'a> PartialOrd for StateDouble<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<'a> Ord for StateDouble<'a> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        let left = self.calculate_final_pressure();
+        let right = other.calculate_final_pressure();
+        left.cmp(&right)
+    }
+}
+
+/// Finds the path with the most pressure after 30 minutes and returns the value.
+///
+/// Works only on the example input.
+fn traverse_double(valves: &ReducedMap) -> usize {
+    let mut queue: BinaryHeap<StateDouble> = BinaryHeap::new();
+    queue.push(StateDouble::new("AA", "AA", &valves));
+    // dbg!(&valves["MQ"]);
+    let mut best = 0;
+    let mut best_state = StateDouble::default();
+    while let Some(state) = queue.pop() {
+        // movement unavailable
+        if state.remaining.is_empty()
+            || state.person_elapsed_minutes == 30
+            || state.elephant_elapsed_minutes == 30
+        {
+            let score = state.calculate_final_pressure();
+            if score > best {
+                best = score;
+                best_state = state;
+            }
+            continue;
+        }
+
+        // person
+        let mut temp_queue = Vec::new();
+        if state.person_elapsed_minutes != 30 {
+            for (i, possible) in state.remaining.iter().enumerate() {
+                let mut state = state.clone();
+                let connection = &valves[state.person_valve][possible];
+                if state.person_elapsed_minutes + connection.distance > 30 {
+                    state.pressure += state.person_flow_rate * (30 - state.person_elapsed_minutes);
+                    state.person_elapsed_minutes = 30;
+                    temp_queue.push(state);
+                    continue;
+                }
+                // move to the new valve
+                state.person_valve = possible;
+                state.person_elapsed_minutes += connection.distance;
+                state.pressure += state.person_flow_rate * connection.distance;
+                if state.person_elapsed_minutes == 30 {
+                    temp_queue.push(state);
+                    continue;
+                }
+                // turn the valve
+                state.person_elapsed_minutes += 1;
+                state.pressure += state.person_flow_rate;
+                state.remaining.remove(i);
+                state.person_flow_rate += connection.flow_rate;
+
+                temp_queue.push(state);
+            }
+        } else {
+            temp_queue.push(state);
+        }
+
+        // elephant
+        for state in temp_queue {
+            for (i, possible) in state.remaining.iter().enumerate() {
+                if *possible == state.elephant_valve {
+                    continue;
+                }
+                let mut state = state.clone();
+                let connection = &valves[state.elephant_valve][possible];
+                if state.elephant_elapsed_minutes + connection.distance > 30 {
+                    state.pressure +=
+                        state.elephant_flow_rate * (30 - state.elephant_elapsed_minutes);
+                    state.elephant_elapsed_minutes = 30;
+                    queue.push(state);
+                    continue;
+                }
+                // move to the new valve
+                state.elephant_valve = possible;
+                state.elephant_elapsed_minutes += connection.distance;
+                state.pressure += state.elephant_flow_rate * connection.distance;
+                if state.elephant_elapsed_minutes == 30 {
+                    queue.push(state);
+                    continue;
+                }
+                // turn the valve
+                state.elephant_elapsed_minutes += 1;
+                state.pressure += state.elephant_flow_rate;
+                state.remaining.remove(i);
+                state.elephant_flow_rate += connection.flow_rate;
+                // dbg!(&state);
+                queue.push(state);
+            }
+        }
+    }
+    best_state.calculate_final_pressure()
 }
 
 #[cfg(test)]
