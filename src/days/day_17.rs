@@ -220,8 +220,10 @@ impl Day for Day17 {
     fn part_2(&self, input: &str) -> String {
         let mut ops = input.chars().cycle();
         let mut chamber = Chamber::new();
-        let mut count: usize = 0;
-        while count < 1000000000000 {
+        let mut deltas = [0; 5000];
+        let mut previous = 0;
+        let mut count = 0;
+        while count < 5000 {
             // println!("Before:\n{chamber}-");
             match ops.next().unwrap() {
                 '>' => chamber.move_right(),
@@ -230,10 +232,39 @@ impl Day for Day17 {
             }
             // println!("After:\n{chamber}-");
             if chamber.move_down() {
+                deltas[count] = chamber.height - previous;
+                previous = chamber.height;
                 count += 1;
             }
         }
-        chamber.height.to_string()
+        let (offset, size) = (0..500)
+            .find_map(|offset| {
+                let delta_iter = deltas.iter().skip(offset);
+                let size = (2..=2500).find_map(|size| {
+                    let window = deltas[offset..offset + size].into_iter().cycle();
+                    if delta_iter.clone().zip(window).all(|(a, b)| a == b) {
+                        // cycle found
+                        Some(size)
+                    } else {
+                        None
+                    }
+                });
+                size.map(|size| (offset, size))
+            })
+            .unwrap();
+        let mut delta_iter = deltas.iter();
+        let mut count = 1_000_000_000_000;
+        let offset_delta = delta_iter.by_ref().take(offset).sum::<usize>();
+        count -= offset;
+        let cycle_deltas: Vec<usize> = delta_iter.take(size).copied().collect();
+        let cycle_delta = cycle_deltas.iter().sum::<usize>();
+        let cycle_count = count / size;
+        count %= size;
+        let remaining_height = cycle_deltas.into_iter().take(count).sum::<usize>();
+        println!("{count}");
+        let height: usize = offset_delta + cycle_count * cycle_delta + remaining_height;
+
+        height.to_string()
     }
 }
 
