@@ -204,6 +204,7 @@ fn traverse_single(valves: &ReducedMap) -> usize {
             let connection = &valves[state.current_valve][possible];
             if state.elapsed_minutes + connection.distance >= 30 {
                 if !checked {
+                    state.pressure = state.calculate_final_pressure();
                     state.elapsed_minutes = 30;
                     let best = best_array.get_mut(state.elapsed_minutes).unwrap();
                     let score = state.calculate_final_pressure();
