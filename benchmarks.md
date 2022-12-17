@@ -29,7 +29,7 @@ The following table lists times rounded to the nearest microsecond after running
 |  13   |
 |  14   |
 |  15   |
-|  16   |
+|  16   | 1.4 ms | 140 s  |
 |  17   |
 |  18   |
 |  19   |

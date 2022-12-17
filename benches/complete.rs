@@ -34,6 +34,20 @@ fn load_input(day: u8) -> String {
     std::fs::read_to_string(path).unwrap()
 }
 
+fn day_16(c: &mut Criterion) {
+    let input = load_input(16);
+    let mut group = c.benchmark_group("day_16");
+    let day = get_day!(16);
+    group.bench_with_input("part_1", &input, |b, input| {
+        b.iter(|| day.part_1(&input))
+    });
+    group.sample_size(10);
+    group.bench_with_input("part_2", &input, |b, input| {
+        b.iter(|| day.part_2(&input))
+    });
+    group.finish();
+}
+
 bench_day!(01);
 bench_day!(02);
 bench_day!(03);
@@ -49,7 +63,7 @@ bench_day!(12);
 bench_day!(13);
 bench_day!(14);
 bench_day!(15);
-bench_day!(16);
+// bench_day!(16);
 
 criterion_group!(
     complete, day_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08, day_09, day_10,
