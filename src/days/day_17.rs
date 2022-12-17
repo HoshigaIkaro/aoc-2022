@@ -12,11 +12,11 @@ struct Rock {
 
 #[derive(Debug)]
 enum RockType {
-    Horizontal = 0,
-    Cross = 1,
-    Angle = 2,
-    Vertical = 3,
-    Square = 4,
+    Horizontal,
+    Cross,
+    Angle,
+    Vertical,
+    Square,
 }
 
 impl RockType {
@@ -37,15 +37,6 @@ impl Rock {
             rock_type: RockType::Horizontal,
             x,
             y,
-        }
-    }
-    /// Gets the right edge of the bounding box
-    fn get_right(&self) -> usize {
-        match self.rock_type {
-            RockType::Horizontal => self.x + 3,
-            RockType::Cross | RockType::Angle => self.x + 2,
-            RockType::Vertical => self.x,
-            RockType::Square => self.x + 1,
         }
     }
 
@@ -179,7 +170,7 @@ impl std::fmt::Display for Chamber {
         for y in (0..self.height).rev() {
             for x in 0..7 {
                 if rock_points.contains(&(x, y)) {
-                    write!(f, "{}", '@')?;
+                    write!(f, "@")?;
                 } else {
                     let tile = self.get((x, y));
                     let out = match tile {
@@ -189,7 +180,7 @@ impl std::fmt::Display for Chamber {
                     write!(f, "{}", out)?;
                 }
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Ok(())
     }
@@ -240,14 +231,9 @@ impl Day for Day17 {
         let (offset, size) = (0..500)
             .find_map(|offset| {
                 let delta_iter = deltas.iter().skip(offset);
-                let size = (2..=2500).find_map(|size| {
-                    let window = deltas[offset..offset + size].into_iter().cycle();
-                    if delta_iter.clone().zip(window).all(|(a, b)| a == b) {
-                        // cycle found
-                        Some(size)
-                    } else {
-                        None
-                    }
+                let size = (2..=2500).find(|size| {
+                    let window = deltas[offset..offset + size].iter().cycle();
+                    delta_iter.clone().zip(window).all(|(a, b)| a == b)
                 });
                 size.map(|size| (offset, size))
             })
@@ -261,7 +247,7 @@ impl Day for Day17 {
         let cycle_count = count / size;
         count %= size;
         let remaining_height = cycle_deltas.into_iter().take(count).sum::<usize>();
-        println!("{count}");
+        // println!("{count}");
         let height: usize = offset_delta + cycle_count * cycle_delta + remaining_height;
 
         height.to_string()
