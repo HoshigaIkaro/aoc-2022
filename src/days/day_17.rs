@@ -107,13 +107,10 @@ impl Chamber {
         if y > self.height - 1 {
             // need to add row
             self.height = y + 1;
-            // dbg!(&self.grid, y);
             self.grid
                 .extend(vec![Tile::Air; (self.height + 1 - self.grid.len() / 7) * 7]);
         }
-        // dbg!(self.height, self.grid.len());
         // below height of container
-        // dbg!((x, y));
         self.grid[to_index((x, y))] = Tile::Rock;
     }
 
@@ -123,11 +120,9 @@ impl Chamber {
             .get_points()
             .into_iter()
             .any(|(x, y)| y == 0 || self.is_occupied((x, y - 1)));
-        // dbg!(landed);
         if landed {
             // set the rock in stone
             for point in self.rock.get_points() {
-                // println!("{point:?}");
                 self.set(point);
             }
             // change to next type of rock
@@ -194,13 +189,11 @@ impl Day for Day17 {
         let mut chamber = Chamber::new();
         let mut count: usize = 0;
         while count < 2022 {
-            // println!("Before:\n{chamber}-");
             match ops.next().unwrap() {
                 '>' => chamber.move_right(),
                 '<' => chamber.move_left(),
                 _ => unreachable!(),
             }
-            // println!("After:\n{chamber}-");
             if chamber.move_down() {
                 count += 1;
             }
@@ -215,13 +208,11 @@ impl Day for Day17 {
         let mut previous = 0;
         let mut count = 0;
         while count < 5000 {
-            // println!("Before:\n{chamber}-");
             match ops.next().unwrap() {
                 '>' => chamber.move_right(),
                 '<' => chamber.move_left(),
                 _ => unreachable!(),
             }
-            // println!("After:\n{chamber}-");
             if chamber.move_down() {
                 deltas[count] = chamber.height - previous;
                 previous = chamber.height;
@@ -247,7 +238,6 @@ impl Day for Day17 {
         let cycle_count = count / size;
         count %= size;
         let remaining_height = cycle_deltas.into_iter().take(count).sum::<usize>();
-        // println!("{count}");
         let height: usize = offset_delta + cycle_count * cycle_delta + remaining_height;
 
         height.to_string()
@@ -262,7 +252,6 @@ mod day_17_tests {
     fn test_move_down() {
         let mut chamber = Chamber::new();
         chamber.move_down();
-        // dbg!(&chamber);
         chamber.move_down();
         chamber.move_down();
         chamber.move_down(); // lands here
@@ -279,7 +268,6 @@ mod day_17_tests {
         for _ in 0..8 {
             chamber.move_down();
         }
-        dbg!(&chamber);
         assert_eq!(chamber.height, 4)
     }
 }
