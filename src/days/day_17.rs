@@ -1,4 +1,5 @@
-use std::collections::BTreeSet;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 
 use super::Day;
 
@@ -163,9 +164,8 @@ impl Chamber {
     }
 
     /// Checks the three rows underneath the height
-    fn new_floor_level(&self) -> Option<usize> {
-        (self.height.saturating_sub(4)..self.height)
-            .find(|&y| (0..7).all(|x| self.is_occupied((x, y))))
+    fn new_floor_level(&self, y: usize) -> Option<usize> {
+        (y.saturating_sub(1)..=y + 1).find(|&y| (0..7).all(|x| self.is_occupied((x, y))))
     }
 
     fn remove_until_new_floor(&mut self, new_floor: usize) {
@@ -220,11 +220,8 @@ impl Day for Day17 {
             if chamber.move_down() {
                 count += 1;
             }
-            // if let Some(new_floor) = chamber.new_floor_level() {
-            //     chamber.remove_until_new_floor(new_floor);
-            // }
         }
-        // chamber.total_height().to_string()
+
         chamber.height.to_string()
     }
 
@@ -246,8 +243,21 @@ impl Day for Day17 {
                 count += 1;
             }
         }
+        #[cfg(not(feature = "rayon"))]
         let (offset, size) = (0..500)
             .find_map(|offset| {
+                let delta_iter = deltas.iter().skip(offset);
+                let size = (2..=2500).find(|size| {
+                    let window = deltas[offset..offset + size].iter().cycle();
+                    delta_iter.clone().zip(window).all(|(a, b)| a == b)
+                });
+                size.map(|size| (offset, size))
+            })
+            .unwrap();
+        #[cfg(feature = "rayon")]
+        let (offset, size) = (0..500)
+            .into_par_iter()
+            .find_map_first(|offset| {
                 let delta_iter = deltas.iter().skip(offset);
                 let size = (2..=2500).find(|size| {
                     let window = deltas[offset..offset + size].iter().cycle();
@@ -307,7 +317,7 @@ mod day_17_tests {
             .collect();
         chamber.rock.y = 4;
         chamber.height = 3;
-        let new_floor = chamber.new_floor_level().unwrap();
+        let new_floor = chamber.new_floor_level(1).unwrap();
         println!("{chamber}");
         chamber.remove_until_new_floor(new_floor);
         println!("{chamber}");
