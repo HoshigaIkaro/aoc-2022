@@ -279,6 +279,7 @@ impl<'a> StateDouble<'a> {
     /// - the pressure gained from all remaining points
     ///
     /// during the remaining minutes.
+    #[allow(dead_code)]
     fn calculate_score(&self, valves: &ReducedMap) -> usize {
         let minutes_left = 30 - self.person_elapsed_minutes;
         self.pressure

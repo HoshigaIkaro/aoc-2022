@@ -16,9 +16,6 @@ struct Point {
 struct Cube(Point);
 
 impl Cube {
-    fn new(x: isize, y: isize, z: isize) -> Self {
-        Self(Point { x, y, z })
-    }
     fn front(&self) -> Point {
         Point {
             z: self.0.z + 1,
@@ -52,7 +49,6 @@ impl Cube {
         }
     }
     fn down(&self) -> Point {
-        // dbg!(self);
         Point {
             y: self.0.y - 1,
             ..self.0
@@ -80,7 +76,28 @@ pub struct Day18;
 impl Day for Day18 {
     fn part_1(&self, input: &str) -> String {
         let cubes = parse_cubes(input);
-        let total = surface_area(&cubes);
+        let points: HashSet<Point> = cubes.iter().map(|c| c.0).collect();
+        let mut total = 0;
+        for cube in cubes {
+            if !points.contains(&cube.front()) {
+                total += 1;
+            }
+            if !points.contains(&cube.back()) {
+                total += 1;
+            }
+            if !points.contains(&cube.right()) {
+                total += 1;
+            }
+            if !points.contains(&cube.left()) {
+                total += 1;
+            }
+            if !points.contains(&cube.up()) {
+                total += 1;
+            }
+            if !points.contains(&cube.down()) {
+                total += 1;
+            }
+        }
         total.to_string()
     }
 
@@ -91,43 +108,29 @@ impl Day for Day18 {
         let max_z = cubes.iter().map(|c| c.0.z).max().unwrap();
 
         let points: HashSet<Point> = cubes.iter().map(|c| c.0).collect();
-        let mut total_droplet = 0;
-        let mut possible: HashSet<Cube> = HashSet::new();
-        for cube in cubes {
-            if !points.contains(&cube.front()) {
-                possible.insert(Cube(cube.front()));
-                total_droplet += 1;
+        let mut total = 0;
+        let outside = find_outside(&points, max_x, max_y, max_z);
+        for point in outside {
+            let cube = Cube(point);
+            if points.contains(&cube.front()) {
+                total += 1;
             }
-            if !points.contains(&cube.back()) {
-                possible.insert(Cube(cube.back()));
-                total_droplet += 1;
+            if points.contains(&cube.back()) {
+                total += 1;
             }
-            if !points.contains(&cube.right()) {
-                possible.insert(Cube(cube.right()));
-                total_droplet += 1;
+            if points.contains(&cube.right()) {
+                total += 1;
             }
-            if !points.contains(&cube.left()) {
-                possible.insert(Cube(cube.left()));
-                total_droplet += 1;
+            if points.contains(&cube.left()) {
+                total += 1;
             }
-            if !points.contains(&cube.up()) {
-                possible.insert(Cube(cube.up()));
-                total_droplet += 1;
+            if points.contains(&cube.up()) {
+                total += 1;
             }
-            if !points.contains(&cube.down()) {
-                possible.insert(Cube(cube.down()));
-                total_droplet += 1;
+            if points.contains(&cube.down()) {
+                total += 1;
             }
         }
-        let outside = find_outside(&points, max_x, max_y, max_z);
-        let mut inside: Vec<Cube> = possible
-            .into_iter()
-            .filter(|cube| !outside.contains(&cube.0) && !points.contains(&cube.0))
-            .collect();
-        inside.sort();
-        dbg!(&inside);
-        let total_inside = surface_area(&inside);
-        let total = total_droplet - total_inside;
         total.to_string()
     }
 }
@@ -181,32 +184,6 @@ fn find_outside(
         }
     }
     visited
-}
-
-fn surface_area(cubes: &[Cube]) -> usize {
-    let points: HashSet<Point> = cubes.iter().map(|c| c.0).collect();
-    let mut total = 0;
-    for cube in cubes {
-        if !points.contains(&cube.front()) {
-            total += 1;
-        }
-        if !points.contains(&cube.back()) {
-            total += 1;
-        }
-        if !points.contains(&cube.right()) {
-            total += 1;
-        }
-        if !points.contains(&cube.left()) {
-            total += 1;
-        }
-        if !points.contains(&cube.up()) {
-            total += 1;
-        }
-        if !points.contains(&cube.down()) {
-            total += 1;
-        }
-    }
-    total
 }
 
 #[cfg(test)]

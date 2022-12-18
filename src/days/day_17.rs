@@ -90,6 +90,7 @@ fn to_index((x, y): Point) -> usize {
     y * 7 + x
 }
 
+#[allow(dead_code)]
 impl Chamber {
     fn new() -> Self {
         Self {
