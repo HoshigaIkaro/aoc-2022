@@ -144,6 +144,10 @@ impl Blueprint {
             })
             .collect()
     }
+
+    fn score(&self) -> usize {
+        self.pack.ore + self.pack.clay * 4 + self.pack.obsidian * 16 + self.pack.geode * 32
+    }
 }
 
 pub struct Day19;
@@ -153,7 +157,7 @@ impl Day for Day19 {
         let mut bl = Blueprint::new(1, 4, 2, (3, 14), (2, 7));
         let mut queue = VecDeque::new();
         queue.push_back(bl);
-        let max = AtomicUsize::new(0);
+        let max_geode = AtomicUsize::new(0);
         let mut best = [0; 25];
         loop {
             if queue.is_empty() {
@@ -162,22 +166,22 @@ impl Day for Day19 {
             // dbg!(queue.len());
             let mut sub = Vec::new();
             for state in queue.drain(0..) {
-                if state.rates.geode < best[state.minutes] {
+                if state.score() < best[state.minutes] {
                     continue;
                 }
-                best[state.minutes] = best[state.minutes].max(state.pack.geode);
+                best[state.minutes] = best[state.minutes].max(state.score());
                 sub.push(state);
             }
             // dbg!(sub.len());
             let new: Vec<Blueprint> = sub
                 .par_iter_mut()
                 .flat_map(|state| {
-                    if best[state.minutes] > state.pack.geode {
+                    if best[state.minutes] > state.score() {
                         return Vec::new();
                     }
                     if state.minutes == 24 {
                         dbg!(&state);
-                        max.fetch_max(state.pack.geode, Ordering::Relaxed);
+                        max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                         return Vec::new();
                     }
                     let new = state.advance();
@@ -189,7 +193,7 @@ impl Day for Day19 {
             }
         }
         // dbg!(bl);
-        max.load(Ordering::Acquire).to_string()
+        max_geode.load(Ordering::Acquire).to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
