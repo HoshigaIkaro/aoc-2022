@@ -1,6 +1,6 @@
 use std::{
     collections::{HashSet, VecDeque},
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::atomic::{AtomicUsize, Ordering}, io::Write,
 };
 
 use rayon::prelude::*;
@@ -114,7 +114,9 @@ impl Blueprint {
             state.action = Action::Obsidian(1);
             states.push(state);
         }
-        if self.pack.ore >= self.costs.clay {
+        if self.pack.ore >= self.costs.clay
+            && (self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0)
+        {
             let mut state = self.clone();
             state.pack.ore -= self.costs.clay;
             state.action = Action::Clay(1);
@@ -146,11 +148,12 @@ impl Blueprint {
     }
 
     fn score(&self) -> usize {
-        (24 - self.minutes)
-            * (self.rates.ore
-                + self.rates.clay * 2
-                + self.rates.obsidian * 4
-                + self.rates.geode * 8)
+        (self.rates.ore + self.rates.clay * 4 + self.rates.obsidian * 32 + self.rates.geode * 64)
+            + (24 - self.minutes)
+                * (self.rates.ore
+                    + self.rates.clay * 4
+                    + self.rates.obsidian * 16
+                    + self.rates.geode * 64)
     }
 }
 
@@ -158,17 +161,18 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        let mut bl = Blueprint::new(1, 4, 2, (3, 14), (2, 7));
+        let bl = Blueprint::new(1, 4, 2, (3, 14), (2, 7));
         let mut queue = VecDeque::new();
         queue.push_back(bl);
-        let max_geode = AtomicUsize::new(0);
-        let mut best = [0; 25];
+        let mut max_geode = 0;
+        let mut best = [0; 24];
         let mut i = 0;
+        let mut log_file = std::fs::File::create("log.log").unwrap();
         loop {
+            dbg!(i);
             if queue.is_empty() {
                 break;
             }
-            // dbg!(queue.len());
             let mut sub = Vec::new();
             for state in queue.drain(0..) {
                 if state.score() < best[state.minutes] {
@@ -177,29 +181,31 @@ impl Day for Day19 {
                 best[state.minutes] = best[state.minutes].max(state.score());
                 sub.push(state);
             }
-            // dbg!(sub.len());
             let new: Vec<Blueprint> = sub
                 .par_iter_mut()
                 .flat_map(|state| {
-                    if state.rates.geode == 1 {
-                        dbg!('a');
-                    }
                     if state.minutes == 24 {
-                        dbg!(&state.pack.geode);
-                        max_geode.fetch_max(state.pack.geode, Ordering::Acquire);
-                        return Vec::new();
+                        vec![*state]
+                    } else {
+                        state.advance()
                     }
-                    let new = state.advance();
-                    new
                 })
                 .collect();
             for state in new {
-                queue.push_back(state);
+                max_geode = state.pack.geode.max(max_geode);
+                // if state.rates.geode == 1 {
+                //     dbg!(state.score());
+                // }
+                if state.minutes < 24 {
+                    queue.push_back(state);
+                } else {
+                    writeln!(log_file, "{:?}", state).unwrap();
+                }
             }
             i += 1;
         }
         dbg!(best);
-        max_geode.load(Ordering::Acquire).to_string()
+        max_geode.to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
