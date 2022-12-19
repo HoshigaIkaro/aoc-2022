@@ -146,7 +146,11 @@ impl Blueprint {
     }
 
     fn score(&self) -> usize {
-        self.pack.ore + self.pack.clay * 4 + self.pack.obsidian * 16 + self.pack.geode * 32
+        (24 - self.minutes)
+            * (self.rates.ore
+                + self.rates.clay * 2
+                + self.rates.obsidian * 4
+                + self.rates.geode * 8)
     }
 }
 
@@ -159,6 +163,7 @@ impl Day for Day19 {
         queue.push_back(bl);
         let max_geode = AtomicUsize::new(0);
         let mut best = [0; 25];
+        let mut i = 0;
         loop {
             if queue.is_empty() {
                 break;
@@ -176,12 +181,12 @@ impl Day for Day19 {
             let new: Vec<Blueprint> = sub
                 .par_iter_mut()
                 .flat_map(|state| {
-                    if best[state.minutes] > state.score() {
-                        return Vec::new();
+                    if state.rates.geode == 1 {
+                        dbg!('a');
                     }
                     if state.minutes == 24 {
-                        dbg!(&state);
-                        max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                        dbg!(&state.pack.geode);
+                        max_geode.fetch_max(state.pack.geode, Ordering::Acquire);
                         return Vec::new();
                     }
                     let new = state.advance();
@@ -191,8 +196,9 @@ impl Day for Day19 {
             for state in new {
                 queue.push_back(state);
             }
+            i += 1;
         }
-        // dbg!(bl);
+        dbg!(best);
         max_geode.load(Ordering::Acquire).to_string()
     }
 
