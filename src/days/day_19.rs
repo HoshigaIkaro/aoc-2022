@@ -174,7 +174,7 @@ impl Day for Day19 {
         // let bl = Blueprint::new(2, 2, 3, (3, 8), (3, 12));
         let mut queue = VecDeque::new();
         queue.push_back(bl);
-        let mut max_geode = 0;
+        let max_geode = AtomicUsize::new(0);
         let best = AtomicUsize::new(0);
         let mut i = 0;
         let mut log_file = std::fs::File::create("log.log").unwrap();
@@ -197,29 +197,25 @@ impl Day for Day19 {
                 .collect::<Vec<_>>();
             let new: Vec<Blueprint> = reduced
                 .par_iter_mut()
-                .flat_map(|state| {
-                    // if state.minutes == 24 {
-                    //     vec![*state]
-                    // } else {
-                    state.advance()
-                    // }
-                })
+                .flat_map(|state| state.advance())
                 .collect();
-            for state in new {
-                max_geode = state.pack.geode.max(max_geode);
-                // println!("{:?}", state);
-                if state.rates.geode == 2 {
-                    // break 'outer;
-                }
+            for state in &new {
                 writeln!(log_file, "{:?}", state).unwrap();
-                if state.minutes < 24 {
-                    queue.push_back(state);
-                }
             }
+            let next = new.into_par_iter().filter_map(|state| {
+                max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                if state.minutes < 24 {
+                    Some(state)
+                } else {
+                    None
+                }
+            }).collect::<Vec<_>>();
+            queue.extend(next);
+
             i += 1;
         }
         dbg!(best);
-        max_geode.to_string()
+        max_geode.load(Ordering::Acquire).to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
