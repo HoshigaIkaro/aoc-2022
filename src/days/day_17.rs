@@ -1,19 +1,16 @@
-#[cfg(feature = "rayon")]
-use rayon::prelude::*;
-
 use super::Day;
 
 type Point = (usize, usize);
 
 //- Stores the point at the lower left corner
-#[derive(Debug)]
+#[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 struct Rock {
     rock_type: RockType,
     x: usize,
     y: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 enum RockType {
     Horizontal = 0,
     Cross = 1,
@@ -131,6 +128,11 @@ impl Chamber {
             for point in self.rock.get_points() {
                 self.set(point);
             }
+            // if self.rock.y > 10 {
+            //     if let Some(new_floor) = self.new_floor_level(self.rock.y) {
+            //         self.remove_until_new_floor(new_floor);
+            //     }
+            // }
             // change to next type of rock
             self.rock.set_next_type();
             // reset position;
@@ -164,7 +166,7 @@ impl Chamber {
         }
     }
 
-    /// Checks the three rows underneath the height
+    /// Checks three rows, starting from at most one underneath the provided level.
     fn new_floor_level(&self, y: usize) -> Option<usize> {
         (y.saturating_sub(1)..=y + 1).find(|&y| (0..7).all(|x| self.is_occupied((x, y))))
     }
@@ -174,7 +176,7 @@ impl Chamber {
         self.grid = self.grid.split_off(new_floor * 7);
         // change view
         self.height -= new_floor;
-        self.rock.y -= new_floor;
+        // self.rock.y -= new_floor;
     }
 
     fn total_height(&self) -> usize {
@@ -228,57 +230,49 @@ impl Day for Day17 {
 
     fn part_2(&self, input: &str) -> String {
         let mut ops = input.chars().cycle();
+        let mut op_index = 0;
         let mut chamber = Chamber::new();
-        let mut deltas = [0; 5000];
-        let mut previous = 0;
-        let mut count = 0;
-        while count < 5000 {
+        let mut states = Vec::new();
+        let mut total_heights = Vec::new();
+        let (offset_index, cycle_size) = loop {
             match ops.next().unwrap() {
                 '>' => chamber.move_right(),
                 '<' => chamber.move_left(),
                 _ => unreachable!(),
             }
-            if chamber.move_down() {
-                deltas[count] = chamber.height - previous;
-                previous = chamber.height;
-                count += 1;
-            }
-        }
-        #[cfg(not(feature = "rayon"))]
-        let (offset, size) = (0..500)
-            .find_map(|offset| {
-                let delta_iter = deltas.iter().skip(offset);
-                let size = (2..=2500).find(|size| {
-                    let window = deltas[offset..offset + size].iter().cycle();
-                    delta_iter.clone().zip(window).all(|(a, b)| a == b)
-                });
-                size.map(|size| (offset, size))
-            })
-            .unwrap();
-        #[cfg(feature = "rayon")]
-        let (offset, size) = (0..500)
-            .into_par_iter()
-            .find_map_first(|offset| {
-                let delta_iter = deltas.iter().skip(offset);
-                let size = (2..=2500).find(|size| {
-                    let window = deltas[offset..offset + size].iter().cycle();
-                    delta_iter.clone().zip(window).all(|(a, b)| a == b)
-                });
-                size.map(|size| (offset, size))
-            })
-            .unwrap();
-        let mut delta_iter = deltas.iter();
-        let mut count = 1_000_000_000_000;
-        let offset_delta = delta_iter.by_ref().take(offset).sum::<usize>();
-        count -= offset;
-        let cycle_deltas: Vec<usize> = delta_iter.take(size).copied().collect();
-        let cycle_delta = cycle_deltas.iter().sum::<usize>();
-        let cycle_count = count / size;
-        count %= size;
-        let remaining_height = cycle_deltas.into_iter().take(count).sum::<usize>();
-        let height: usize = offset_delta + cycle_count * cycle_delta + remaining_height;
 
-        height.to_string()
+            if chamber.move_down() {
+                // rock has landed
+                total_heights.push(chamber.total_height());
+                let state = (
+                    chamber
+                        .grid
+                        .iter()
+                        .copied()
+                        .rev()
+                        .take(20)
+                        .collect::<Vec<_>>(),
+                    chamber.rock.rock_type,
+                    op_index,
+                );
+                if states.contains(&state) {
+                    let offset_index = states.iter().position(|s| *s == state).unwrap();
+                    break (offset_index, states.len() - offset_index);
+                }
+                states.push(state);
+            }
+            op_index = (op_index + 1) % input.len();
+        };
+        let offset = offset_index + 1;
+        let offset_height = total_heights[offset_index];
+        let single_cycle_height = total_heights.last().unwrap() - offset_height;
+        let cycles = (1_000_000_000_000 - offset) / cycle_size;
+        let cycle_height = single_cycle_height * cycles;
+        let remaining = 1_000_000_000_000 - (cycles * cycle_size) - offset;
+        let remaining_height =
+            total_heights[offset_index + remaining] - total_heights[offset_index];
+        let total_height = offset_height + cycle_height + remaining_height;
+        total_height.to_string()
     }
 }
 
