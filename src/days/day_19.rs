@@ -113,6 +113,7 @@ impl Blueprint {
         if self.pack.ore >= self.costs.obsidian.0
             && self.pack.clay >= self.costs.obsidian.1
             && (self.rates.obsidian / self.rates.ore < self.costs.geode.1 / self.costs.geode.0)
+            && self.rates.obsidian < self.costs.geode.1
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.obsidian.0;
@@ -122,18 +123,19 @@ impl Blueprint {
         }
         if self.pack.ore >= self.costs.clay
             && (self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0)
+            && self.rates.clay < 14
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.clay;
             state.action = Action::Clay;
             states.push(state);
         }
-        // if self.pack.ore > 3 && self.rates.ore < 4 {
-        //     let mut state = self.clone();
-        //     state.pack.ore -= self.costs.ore;
-        //     state.action = Action::Ore(1);
-        //     states.push(state);
-        // }
+        if self.pack.ore > 3 && self.rates.ore < 4 {
+            let mut state = self.clone();
+            state.pack.ore -= self.costs.ore;
+            state.action = Action::Ore;
+            states.push(state);
+        }
 
         states
             .iter_mut()
@@ -171,7 +173,7 @@ pub struct Day19;
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
         let bl = Blueprint::new(1, 4, 2, (3, 14), (2, 7));
-        // let bl = Blueprint::new(2, 2, 3, (3, 8), (3, 12));
+        let bl = Blueprint::new(2, 2, 3, (3, 8), (3, 12));
         let mut queue = VecDeque::new();
         queue.push_back(bl);
         let max_geode = AtomicUsize::new(0);
@@ -199,17 +201,20 @@ impl Day for Day19 {
                 .par_iter_mut()
                 .flat_map(|state| state.advance())
                 .collect();
-            for state in &new {
-                writeln!(log_file, "{:?}", state).unwrap();
-            }
-            let next = new.into_par_iter().filter_map(|state| {
-                max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
-                if state.minutes < 24 {
-                    Some(state)
-                } else {
-                    None
-                }
-            }).collect::<Vec<_>>();
+            // for state in &new {
+            //     writeln!(log_file, "{:?}", state).unwrap();
+            // }
+            let next = new
+                .into_par_iter()
+                .filter_map(|state| {
+                    max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                    if state.minutes < 24 {
+                        Some(state)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
             queue.extend(next);
 
             i += 1;
