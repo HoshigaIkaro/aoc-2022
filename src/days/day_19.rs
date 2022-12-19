@@ -114,6 +114,7 @@ impl Blueprint {
             && self.pack.clay >= self.costs.obsidian.1
             && (self.rates.obsidian / self.rates.ore < self.costs.geode.1 / self.costs.geode.0)
             && self.rates.obsidian < self.costs.geode.1
+        // && self.rates.obsidian < self.costs.geode.1
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.obsidian.0;
@@ -123,14 +124,14 @@ impl Blueprint {
         }
         if self.pack.ore >= self.costs.clay
             && (self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0)
-            && self.rates.clay < 14
+            && self.rates.clay < self.costs.obsidian.1
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.clay;
             state.action = Action::Clay;
             states.push(state);
         }
-        if self.pack.ore > 3 && self.rates.ore < 4 {
+        if self.pack.ore >= self.costs.ore && self.rates.ore < 4 {
             let mut state = self.clone();
             state.pack.ore -= self.costs.ore;
             state.action = Action::Ore;
@@ -158,13 +159,7 @@ impl Blueprint {
 
     fn score(&self) -> usize {
         // (self.rates.ore + self.rates.clay * 4 +
-        self.rates.obsidian * 32 + self.rates.geode * 64
-            // )
-            + (24 - self.minutes)
-                * (self.rates.ore
-                    + self.rates.clay * 4
-                    + self.rates.obsidian * 32
-                    + self.rates.geode * 64)
+        self.pack.geode + self.rates.geode * (24 - self.minutes)
     }
 }
 
@@ -172,58 +167,84 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        let bl = Blueprint::new(1, 4, 2, (3, 14), (2, 7));
-        let bl = Blueprint::new(2, 2, 3, (3, 8), (3, 12));
-        let mut queue = VecDeque::new();
-        queue.push_back(bl);
-        let max_geode = AtomicUsize::new(0);
-        let best = AtomicUsize::new(0);
-        let mut i = 0;
-        let mut log_file = std::fs::File::create("log.log").unwrap();
-        loop {
-            dbg!(i);
-            dbg!(queue.len());
-            if queue.is_empty() {
-                break;
-            }
-            let mut reduced = queue
-                .par_drain(0..)
-                .filter_map(|state| {
-                    if state.pack.geode >= best.load(Ordering::Relaxed) {
-                        best.fetch_max(state.pack.geode, Ordering::Release);
-                        Some(state)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>();
-            let new: Vec<Blueprint> = reduced
-                .par_iter_mut()
-                .flat_map(|state| state.advance())
-                .collect();
-            // for state in &new {
-            //     writeln!(log_file, "{:?}", state).unwrap();
-            // }
-            let next = new
-                .into_par_iter()
-                .filter_map(|state| {
-                    max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
-                    if state.minutes < 24 {
-                        Some(state)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>();
-            queue.extend(next);
+        let blueprints = parse_blueprints(input);
+        let mut total = 0;
+        for blueprint in blueprints {
+            println!(
+                "On blueprint {} -----------------------------------",
+                blueprint.id
+            );
+            let mut queue = VecDeque::new();
+            queue.push_back(blueprint);
+            let max_geode = AtomicUsize::new(0);
+            let best = AtomicUsize::new(0);
+            let mut i = 0;
+            // let mut log_file = std::fs::File::create("log.log").unwrap();
+            loop {
+                dbg!(i);
+                dbg!(queue.len());
+                if queue.is_empty() {
+                    break;
+                }
 
-            i += 1;
+                let new: Vec<Blueprint> = queue
+                    .par_drain(0..)
+                    // .par_iter_mut()
+                    .flat_map(|mut state| state.advance())
+                    .collect();
+                // for state in &new {
+                //     writeln!(log_file, "{:?}", state).unwrap();
+                // }
+                dbg!("Pruning");
+                let next = new
+                    .into_par_iter()
+                    .filter_map(|state| {
+                        max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                        if state.minutes < 24 && state.score() >= best.load(Ordering::Relaxed) {
+                            best.fetch_max(state.score(), Ordering::Release);
+                            Some(state)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                queue.extend(next);
+
+                i += 1;
+            }
+            dbg!(best, &max_geode);
+            let quality = blueprint.id * max_geode.load(Ordering::Acquire);
+            total += quality;
         }
-        dbg!(best);
-        max_geode.load(Ordering::Acquire).to_string()
+        total.to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
         todo!()
     }
+}
+
+fn parse_blueprints(input: &str) -> Vec<Blueprint> {
+    input
+        .lines()
+        .map(|line| {
+            let (id, rest) = line
+                .strip_prefix("Blueprint ")
+                .unwrap()
+                .split_once(": ")
+                .unwrap();
+            let id = id.parse().unwrap();
+            let mut numbers = rest
+                .split_whitespace()
+                .filter(|c| c.chars().all(|d| d.is_digit(10)))
+                .map(|s| usize::from_str_radix(s, 10).unwrap());
+            let ore = numbers.next().unwrap();
+            let clay = numbers.next().unwrap();
+            dbg!(clay);
+            let obsidian = (numbers.next().unwrap(), numbers.next().unwrap());
+            dbg!(obsidian);
+            let geode = (numbers.next().unwrap(), numbers.next().unwrap());
+            Blueprint::new(id, ore, clay, obsidian, geode)
+        })
+        .collect()
 }
