@@ -111,7 +111,7 @@ impl<const R: usize> Blueprint<R> {
             }
             if self.pack.ore >= self.costs.obsidian.0
                 && self.pack.clay >= self.costs.obsidian.1
-                // && self.rates.obsidian < self.costs.geode.1
+                && self.rates.obsidian < self.costs.geode.1
             {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.obsidian.0;
@@ -120,17 +120,15 @@ impl<const R: usize> Blueprint<R> {
                 states.push(state);
             }
             if self.pack.ore >= self.costs.clay
-                // && self.rates.clay < self.costs.obsidian.1
-                // && self.minutes < R / 2 + 10
+                && self.rates.clay < self.costs.obsidian.1
+                && self.minutes < R / 2 + 10
             {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.clay;
                 state.action = Action::Clay;
                 states.push(state);
             }
-            if self.pack.ore >= self.costs.ore 
-            // && self.minutes < R / 2 + 8 
-            {
+            if self.pack.ore >= self.costs.ore && self.minutes < R / 2 + 8 {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.ore;
                 state.action = Action::Ore;
