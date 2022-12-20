@@ -171,6 +171,7 @@ impl<const R: usize> Blueprint<R> {
         {
             states.push(self.clone());
         }
+
         // println!("{:?}", states);
 
         states
@@ -319,36 +320,21 @@ impl Day for Day19 {
                     if queue.is_empty() {
                         break;
                     }
-                    let new = queue.par_drain().take(64).collect::<Vec<_>>();
+                    let mut new = Vec::new();
+                    for _ in 0..queue.len().min(100) {
+                        let state = queue.pop().unwrap();
+                        new.push(state);
+                    }
+                    queue.clear();
                     let new = new
                         .into_par_iter()
                         .flat_map(|mut state| state.advance())
                         .into_par_iter()
                         .filter_map(|state| {
-                            max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                             if state.minutes < 32 {
-                                // println!(
-                                //     "{} {} {} {} | {}",
-                                //     state.rates.ore,
-                                //     state.rates.clay,
-                                //     state.rates.obsidian,
-                                //     state.rates.geode,
-                                //     state.score()
-                                // );
-                                if state.score() >= best.load(Ordering::Relaxed) {
-                                    best.store(state.score(), Ordering::Relaxed);
-                                    Some(state)
-                                } else {
-                                    if state.rates.clay < 1
-                                        || (state.rates.geode < 3)
-                                    {
-                                        Some(state)
-                                    } else {
-                                        None
-                                    }
-                                    // None
-                                }
+                                Some(state)
                             } else {
+                                max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                                 None
                             }
                         });
