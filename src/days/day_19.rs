@@ -168,12 +168,11 @@ impl<const R: usize> Blueprint<R> {
     }
 
     fn score(&self) -> usize {
-        // (self.rates.ore + self.rates.clay * 4 +
-        self.pack.ore
-            + (self.pack.clay + self.pack.obsidian * self.costs.obsidian.1) * self.costs.clay
-            + self.pack.obsidian * self.costs.obsidian.0
-            + self.pack.geode * self.costs.geode.0
-        // self.pack.geode + self.rates.geode * (R - self.minutes)
+        // self.pack.ore
+        //     + (self.pack.clay + self.pack.obsidian * self.costs.obsidian.1) * self.costs.clay
+        //     + self.pack.obsidian * self.costs.obsidian.0
+        //     + self.pack.geode * self.costs.geode.0
+        self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 
     fn score_obsidian(&self) -> usize {
