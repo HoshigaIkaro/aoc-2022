@@ -165,16 +165,12 @@ fn traverse<'a>(connections: &'a Connections<'a>, valves: Vec<&'a str>) -> State
     let mut best_state = State::default();
     while let Some(state) = queue.pop() {
         // movement unavailable
-        if state.remaining.is_empty() {
+        if state.remaining.is_empty() || state.elapsed_minutes == 30 {
             let pressure = state.final_pressure();
             if pressure > best_pressure {
                 best_state = state;
             }
             continue;
-        }
-
-        if state.elapsed_minutes == 30 {
-            dbg!("Not possible");
         }
 
         let mut checked = false;
