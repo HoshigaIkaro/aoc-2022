@@ -128,34 +128,34 @@ impl<const R: usize> Blueprint<R> {
         let mut states = Vec::new();
 
         if self.can_buy_geode() {
-            let mut state = self.clone();
+            let mut state = *self;
             state.pack.ore -= self.costs.geode.0;
             state.pack.obsidian -= self.costs.geode.1;
             state.action = Action::Geode;
             states.push(state);
         }
         if self.can_buy_obsidian() && self.rates.obsidian < self.costs.geode.1 {
-            let mut state = self.clone();
+            let mut state = *self;
             state.pack.ore -= self.costs.obsidian.0;
             state.pack.clay -= self.costs.obsidian.1;
             state.action = Action::Obsidian;
             states.push(state);
         }
         if self.can_buy_clay() && self.rates.clay < self.costs.obsidian.1 {
-            let mut state = self.clone();
+            let mut state = *self;
             state.pack.ore -= self.costs.clay;
             state.action = Action::Clay;
             states.push(state);
         }
         if self.can_buy_ore() && self.rates.ore < self.max_ore_cost() {
-            let mut state = self.clone();
+            let mut state = *self;
             state.pack.ore -= self.costs.ore;
             state.action = Action::Ore;
             states.push(state);
         }
 
         if states.len() != 4 {
-            states.push(self.clone());
+            states.push(*self);
         }
 
         states
@@ -256,8 +256,7 @@ impl Day for Day19 {
                         });
                     queue.par_extend(new);
                 }
-                let quality = blueprint.id * max_geode.load(Ordering::Acquire);
-                quality
+                blueprint.id * max_geode.load(Ordering::Acquire)
             })
             .sum();
         total.to_string()
@@ -315,13 +314,11 @@ fn parse_blueprints<const R: usize>(input: &str) -> Vec<Blueprint<R>> {
             let id = id.parse().unwrap();
             let mut numbers = rest
                 .split_whitespace()
-                .filter(|c| c.chars().all(|d| d.is_digit(10)))
-                .map(|s| usize::from_str_radix(s, 10).unwrap());
+                .filter(|c| c.chars().all(|d| d.is_ascii_digit()))
+                .map(|s| s.parse().unwrap());
             let ore = numbers.next().unwrap();
             let clay = numbers.next().unwrap();
-            // dbg!(clay);
             let obsidian = (numbers.next().unwrap(), numbers.next().unwrap());
-            // dbg!(obsidian);
             let geode = (numbers.next().unwrap(), numbers.next().unwrap());
             Blueprint::new(id, ore, clay, obsidian, geode)
         })
