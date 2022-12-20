@@ -265,7 +265,7 @@ impl Day for Day19 {
     fn part_2(&self, input: &str) -> String {
         let blueprints = parse_blueprints::<32>(input);
         let total: usize = blueprints
-            .into_iter()
+            .into_par_iter()
             .take(3)
             .map(|blueprint| {
                 let mut queue = BinaryHeap::new();
