@@ -1,6 +1,5 @@
 use std::{
-    collections::{HashSet, VecDeque},
-    io::Write,
+    collections::VecDeque,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -163,7 +162,7 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        return "".to_string();
+        // return "".to_string();
         let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
             .into_iter()
@@ -179,7 +178,7 @@ impl Day for Day19 {
                 // let mut log_file = std::fs::File::create("log.log").unwrap();
                 loop {
                     // dbg!(i);
-                    // dbg!(queue.len());
+                    dbg!(queue.len());
                     if queue.is_empty() {
                         break;
                     }
@@ -193,10 +192,8 @@ impl Day for Day19 {
                             if state.minutes < 24 {
                                 let c_best = best.load(Ordering::Relaxed);
                                 let score = state.score();
-                                if score > c_best {
+                                if score >= c_best {
                                     best.store(state.score(), Ordering::Relaxed);
-                                    Some(state)
-                                } else if c_best == score {
                                     Some(state)
                                 } else {
                                     None
@@ -246,10 +243,8 @@ impl Day for Day19 {
                             if state.minutes < 32 {
                                 let c_best = best.load(Ordering::Relaxed);
                                 let score = state.score();
-                                if score > c_best {
+                                if score >= c_best {
                                     best.store(state.score(), Ordering::Relaxed);
-                                    Some(state)
-                                } else if c_best == score {
                                     Some(state)
                                 } else {
                                     None
