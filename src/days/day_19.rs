@@ -105,11 +105,24 @@ impl<const R: usize> Blueprint<R> {
         self.pack.geode += self.rates.geode;
     }
 
+    fn can_buy_geode(&self) -> bool {
+        self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1
+    }
+    fn can_buy_obsidian(&self) -> bool {
+        self.pack.ore >= self.costs.obsidian.0 && self.pack.clay >= self.costs.obsidian.1
+    }
+    fn can_buy_clay(&self) -> bool {
+        self.pack.ore >= self.costs.clay
+    }
+    fn can_buy_ore(&self) -> bool {
+        self.pack.ore >= self.costs.ore
+    }
+
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
         // println!("{:?}", &self);
 
-        if self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1
+        if self.can_buy_geode()
         // && self.minutes > R / 2
         {
             // dbg!(self.minutes);
@@ -119,17 +132,14 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Geode;
             states.push(state);
         }
-        if self.pack.ore >= self.costs.obsidian.0
-            && self.pack.clay >= self.costs.obsidian.1
-            && self.rates.obsidian < self.costs.geode.1
-        {
+        if self.can_buy_obsidian() && self.rates.obsidian < self.costs.geode.1 {
             let mut state = self.clone();
             state.pack.ore -= self.costs.obsidian.0;
             state.pack.clay -= self.costs.obsidian.1;
             state.action = Action::Obsidian;
             states.push(state);
         }
-        if self.pack.ore >= self.costs.clay && self.rates.clay < self.costs.obsidian.1
+        if self.can_buy_clay() && self.rates.clay < self.costs.obsidian.1
         // && self.minutes < R / 2 + 6
         {
             let mut state = self.clone();
@@ -137,7 +147,7 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Clay;
             states.push(state);
         }
-        if self.pack.ore >= self.costs.ore && self.rates.ore < self.max_ore_cost() {
+        if self.can_buy_ore() && self.rates.ore < self.max_ore_cost() {
             let mut state = self.clone();
             state.pack.ore -= self.costs.ore;
             state.action = Action::Ore;
