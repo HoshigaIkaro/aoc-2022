@@ -71,7 +71,6 @@ struct Blueprint {
     pack: Pack,
     minutes: usize,
     action: Action,
-    previous: Action,
 }
 
 impl Blueprint {
@@ -89,7 +88,6 @@ impl Blueprint {
             pack: Pack::default(),
             minutes: 0,
             action: Action::Wait,
-            previous: Action::Wait,
         }
     }
 
@@ -103,43 +101,45 @@ impl Blueprint {
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
         states.push(self.clone());
-        if self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1 {
-            let mut state = self.clone();
-            state.pack.ore -= self.costs.geode.0;
-            state.pack.obsidian -= self.costs.geode.1;
-            state.action = Action::Geode;
-            states.push(state);
+        if self.minutes != 24 {
+            if self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1 {
+                let mut state = self.clone();
+                state.pack.ore -= self.costs.geode.0;
+                state.pack.obsidian -= self.costs.geode.1;
+                state.action = Action::Geode;
+                states.push(state);
+            }
+            if self.pack.ore >= self.costs.obsidian.0
+                && self.pack.clay >= self.costs.obsidian.1
+                && (self.rates.obsidian / self.rates.ore < self.costs.geode.1 / self.costs.geode.0)
+                && self.rates.obsidian < self.costs.geode.1
+            // && self.rates.obsidian < self.costs.geode.1
+            {
+                let mut state = self.clone();
+                state.pack.ore -= self.costs.obsidian.0;
+                state.pack.clay -= self.costs.obsidian.1;
+                state.action = Action::Obsidian;
+                states.push(state);
+            }
+            if self.pack.ore >= self.costs.clay
+                && (self.rates.clay / self.rates.ore
+                    < self.costs.obsidian.1 / self.costs.obsidian.0)
+                && self.rates.clay < self.costs.obsidian.1
+            {
+                let mut state = self.clone();
+                state.pack.ore -= self.costs.clay;
+                state.action = Action::Clay;
+                states.push(state);
+            }
+            if self.pack.ore >= self.costs.ore && self.rates.ore < 4 {
+                let mut state = self.clone();
+                state.pack.ore -= self.costs.ore;
+                state.action = Action::Ore;
+                states.push(state);
+            }
         }
-        if self.pack.ore >= self.costs.obsidian.0
-            && self.pack.clay >= self.costs.obsidian.1
-            && (self.rates.obsidian / self.rates.ore < self.costs.geode.1 / self.costs.geode.0)
-            && self.rates.obsidian < self.costs.geode.1
-        // && self.rates.obsidian < self.costs.geode.1
-        {
-            let mut state = self.clone();
-            state.pack.ore -= self.costs.obsidian.0;
-            state.pack.clay -= self.costs.obsidian.1;
-            state.action = Action::Obsidian;
-            states.push(state);
-        }
-        if self.pack.ore >= self.costs.clay
-            && (self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0)
-            && self.rates.clay < self.costs.obsidian.1
-        {
-            let mut state = self.clone();
-            state.pack.ore -= self.costs.clay;
-            state.action = Action::Clay;
-            states.push(state);
-        }
-        if self.pack.ore >= self.costs.ore && self.rates.ore < 4 {
-            let mut state = self.clone();
-            state.pack.ore -= self.costs.ore;
-            state.action = Action::Ore;
-            states.push(state);
-        }
-
         states
-            .iter_mut()
+            .par_iter_mut()
             .map(|state| {
                 state.add();
                 match state.action {
@@ -149,7 +149,6 @@ impl Blueprint {
                     Action::Geode => state.rates.geode += 1,
                     Action::Wait => (),
                 }
-                state.previous = state.action;
                 state.action = Action::Wait;
                 state.minutes += 1;
                 *state
@@ -168,54 +167,56 @@ pub struct Day19;
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
         let blueprints = parse_blueprints(input);
-        let mut total = 0;
-        for blueprint in blueprints {
-            println!(
-                "On blueprint {} -----------------------------------",
-                blueprint.id
-            );
-            let mut queue = VecDeque::new();
-            queue.push_back(blueprint);
-            let max_geode = AtomicUsize::new(0);
-            let best = AtomicUsize::new(0);
-            let mut i = 0;
-            // let mut log_file = std::fs::File::create("log.log").unwrap();
-            loop {
-                dbg!(i);
-                dbg!(queue.len());
-                if queue.is_empty() {
-                    break;
+        let total: usize = blueprints
+            .into_iter()
+            .map(|blueprint| {
+                println!(
+                    "On blueprint {} -----------------------------------",
+                    blueprint.id
+                );
+                let mut queue = VecDeque::new();
+                queue.push_back(blueprint);
+                let max_geode = AtomicUsize::new(0);
+                let best = AtomicUsize::new(0);
+                let mut i = 0;
+                // let mut log_file = std::fs::File::create("log.log").unwrap();
+                loop {
+                    dbg!(i);
+                    dbg!(queue.len());
+                    if queue.is_empty() {
+                        break;
+                    }
+                    let new = queue.split_off(0);
+                    let new = new
+                        .into_par_iter()
+                        .flat_map(|mut state| state.advance())
+                        .into_par_iter()
+                        .filter_map(|state| {
+                            max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                            if state.minutes < 24 {
+                                let c_best = best.load(Ordering::Relaxed);
+                                let score = state.score();
+                                if score > c_best {
+                                    best.store(state.score(), Ordering::Relaxed);
+                                    Some(state)
+                                } else if c_best == score {
+                                    Some(state)
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
+                        });
+                    queue.par_extend(new);
+
+                    i += 1;
                 }
-
-                let new: Vec<Blueprint> = queue
-                    .par_drain(0..)
-                    // .par_iter_mut()
-                    .flat_map(|mut state| state.advance())
-                    .collect();
-                // for state in &new {
-                //     writeln!(log_file, "{:?}", state).unwrap();
-                // }
-                dbg!("Pruning");
-                let next = new
-                    .into_par_iter()
-                    .filter_map(|state| {
-                        max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
-                        if state.minutes < 24 && state.score() >= best.load(Ordering::Relaxed) {
-                            best.fetch_max(state.score(), Ordering::Release);
-                            Some(state)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>();
-                queue.extend(next);
-
-                i += 1;
-            }
-            dbg!(best, &max_geode);
-            let quality = blueprint.id * max_geode.load(Ordering::Acquire);
-            total += quality;
-        }
+                dbg!(best, &max_geode);
+                let quality = blueprint.id * max_geode.load(Ordering::Acquire);
+                quality
+            })
+            .sum();
         total.to_string()
     }
 
