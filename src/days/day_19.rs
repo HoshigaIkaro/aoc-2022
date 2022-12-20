@@ -24,6 +24,14 @@ impl Costs {
             geode,
         }
     }
+
+    fn obsidian_ore_cost(&self) -> usize {
+        self.obsidian.0 + self.obsidian.1 * self.clay
+    }
+
+    fn geode_ore_cost(&self) -> usize {
+        self.geode.0 + self.geode.1 * self.obsidian_ore_cost()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -169,9 +177,9 @@ impl<const R: usize> Blueprint<R> {
 
     fn score(&self) -> usize {
         // self.pack.ore
-        //     + (self.pack.clay + self.pack.obsidian * self.costs.obsidian.1) * self.costs.clay
-        //     + self.pack.obsidian * self.costs.obsidian.0
-        //     + self.pack.geode * self.costs.geode.0
+        //     + self.pack.clay * self.costs.clay
+        //     + self.costs.obsidian_ore_cost() * self.pack.obsidian
+        //     + self.costs.geode_ore_cost() * self.pack.geode
         self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 
@@ -240,7 +248,7 @@ impl Day for Day19 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        // todo!();
+        todo!();
         let blueprints = parse_blueprints::<32>(input);
         let total: usize = blueprints
             .into_iter()
