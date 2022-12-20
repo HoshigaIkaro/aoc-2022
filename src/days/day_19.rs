@@ -1,5 +1,5 @@
 use std::{
-    collections::{BinaryHeap, VecDeque},
+    collections::BinaryHeap,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
