@@ -105,6 +105,7 @@ impl<const R: usize> Blueprint<R> {
         self.pack.geode += self.rates.geode;
     }
 
+    // ████████████████████████████████████████████████████████████████████████
     fn can_buy_geode(&self) -> bool {
         self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1
     }
@@ -117,6 +118,7 @@ impl<const R: usize> Blueprint<R> {
     fn can_buy_ore(&self) -> bool {
         self.pack.ore >= self.costs.ore
     }
+    // ████████████████████████████████████████████████████████████████████████
 
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
@@ -139,7 +141,9 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Obsidian;
             states.push(state);
         }
-        if self.can_buy_clay() && self.rates.clay < self.costs.obsidian.1
+        if self.can_buy_clay()
+            && self.rates.clay < self.costs.obsidian.1
+            && self.pack.ore - self.rates.ore < self.costs.clay
         // && self.minutes < R / 2 + 6
         {
             let mut state = self.clone();
@@ -147,14 +151,17 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Clay;
             states.push(state);
         }
-        if self.can_buy_ore() && self.rates.ore < self.max_ore_cost() {
+        if self.can_buy_ore()
+            && self.rates.ore < self.max_ore_cost()
+            && self.pack.ore - self.rates.ore < self.costs.ore
+        {
             let mut state = self.clone();
             state.pack.ore -= self.costs.ore;
             state.action = Action::Ore;
             states.push(state);
         }
 
-        if self.pack.ore < 5 || states.is_empty() {
+        if states.len() != 4 || states.is_empty() {
             states.push(self.clone());
         }
         // println!("{:?}", states);
@@ -205,7 +212,7 @@ impl Day for Day19 {
         // return "".to_string();
         let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
-            .into_par_iter()
+            .into_iter()
             .map(|blueprint| {
                 println!(
                     "On blueprint {} -----------------------------------",
@@ -258,7 +265,7 @@ impl Day for Day19 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        todo!();
+        // todo!();
         let blueprints = parse_blueprints::<32>(input);
         let total: usize = blueprints
             .into_iter()
