@@ -100,10 +100,9 @@ impl<const R: usize> Blueprint<R> {
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
         // println!("{:?}", &self);
-        
-        if self.pack.ore >= self.costs.geode.0
-            && self.pack.obsidian >= self.costs.geode.1
-            // && self.minutes > R / 2
+
+        if self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1
+        // && self.minutes > R / 2
         {
             // dbg!(self.minutes);
             let mut state = self.clone();
@@ -122,9 +121,8 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Obsidian;
             states.push(state);
         }
-        if self.pack.ore >= self.costs.clay
-            && self.rates.clay < self.costs.obsidian.1
-            // && self.minutes < R / 2 + 6
+        if self.pack.ore >= self.costs.clay && self.rates.clay < self.costs.obsidian.1
+        // && self.minutes < R / 2 + 6
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.clay;
@@ -137,8 +135,8 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Ore;
             states.push(state);
         }
-        
-        if self.pack.ore < 5 || states.is_empty(){
+
+        if self.pack.ore < 5 || states.is_empty() {
             states.push(self.clone());
         }
         // println!("{:?}", states);
@@ -171,7 +169,11 @@ impl<const R: usize> Blueprint<R> {
 
     fn score(&self) -> usize {
         // (self.rates.ore + self.rates.clay * 4 +
-        self.pack.geode + self.rates.geode * (R - self.minutes)
+        self.pack.ore
+            + (self.pack.clay + self.pack.obsidian * self.costs.obsidian.1) * self.costs.clay
+            + self.pack.obsidian * self.costs.obsidian.0
+            + self.pack.geode * self.costs.geode.0
+        // self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 
     fn score_obsidian(&self) -> usize {
@@ -239,7 +241,7 @@ impl Day for Day19 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        todo!();
+        // todo!();
         let blueprints = parse_blueprints::<32>(input);
         let total: usize = blueprints
             .into_iter()

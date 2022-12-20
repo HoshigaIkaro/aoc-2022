@@ -18,6 +18,7 @@ mod day_16b;
 mod day_17;
 mod day_18;
 mod day_19;
+mod day_20;
 
 pub use day_01::Day01;
 pub use day_02::Day02;
@@ -38,6 +39,7 @@ pub use day_16::Day16;
 pub use day_17::Day17;
 pub use day_18::Day18;
 pub use day_19::Day19;
+pub use day_20::Day20;
 
 pub trait Day {
     fn part_1(&self, input: &str) -> String;
