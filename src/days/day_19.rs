@@ -111,7 +111,6 @@ impl Blueprint {
             }
             if self.pack.ore >= self.costs.obsidian.0
                 && self.pack.clay >= self.costs.obsidian.1
-                && (self.rates.obsidian / self.rates.ore < self.costs.geode.1 / self.costs.geode.0)
                 && self.rates.obsidian < self.costs.geode.1
             // && self.rates.obsidian < self.costs.geode.1
             {
@@ -122,16 +121,15 @@ impl Blueprint {
                 states.push(state);
             }
             if self.pack.ore >= self.costs.clay
-                && (self.rates.clay / self.rates.ore
-                    < self.costs.obsidian.1 / self.costs.obsidian.0)
                 && self.rates.clay < self.costs.obsidian.1
+                && self.minutes < 16
             {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.clay;
                 state.action = Action::Clay;
                 states.push(state);
             }
-            if self.pack.ore >= self.costs.ore && self.rates.ore < 4 {
+            if self.pack.ore >= self.costs.ore && self.rates.ore < 4 && self.minutes < 15 {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.ore;
                 state.action = Action::Ore;
@@ -139,8 +137,8 @@ impl Blueprint {
             }
         }
         states
-            .par_iter_mut()
-            .map(|state| {
+            .into_iter()
+            .map(|mut state| {
                 state.add();
                 match state.action {
                     Action::Ore => state.rates.ore += 1,
@@ -151,7 +149,7 @@ impl Blueprint {
                 }
                 state.action = Action::Wait;
                 state.minutes += 1;
-                *state
+                state
             })
             .collect()
     }
