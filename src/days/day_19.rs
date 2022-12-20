@@ -212,7 +212,7 @@ impl Day for Day19 {
         // return "".to_string();
         let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
-            .into_iter()
+            .into_par_iter()
             .map(|blueprint| {
                 println!(
                     "On blueprint {} -----------------------------------",
