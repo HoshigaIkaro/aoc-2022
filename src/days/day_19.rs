@@ -1,5 +1,6 @@
 use std::{
     collections::VecDeque,
+    io::Write,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -31,6 +32,10 @@ impl Costs {
 
     fn geode_ore_cost(&self) -> usize {
         self.geode.0 + self.geode.1 * self.obsidian_ore_cost()
+    }
+
+    fn clay_ore_cost(&self) -> usize {
+        self.clay
     }
 }
 
@@ -143,7 +148,8 @@ impl<const R: usize> Blueprint<R> {
         }
         if self.can_buy_clay()
             && self.rates.clay < self.costs.obsidian.1
-            && self.pack.ore - self.rates.ore < self.costs.clay
+            && self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0
+        // && self.pack.ore - self.rates.ore < self.costs.clay
         // && self.minutes < R / 2 + 6
         {
             let mut state = self.clone();
@@ -151,9 +157,8 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Clay;
             states.push(state);
         }
-        if self.can_buy_ore()
-            && self.rates.ore < self.max_ore_cost()
-            && self.pack.ore - self.rates.ore < self.costs.ore
+        if self.can_buy_ore() && self.rates.ore < self.max_ore_cost()
+        // && self.pack.ore - self.rates.ore < self.costs.ore
         {
             let mut state = self.clone();
             state.pack.ore -= self.costs.ore;
@@ -161,7 +166,7 @@ impl<const R: usize> Blueprint<R> {
             states.push(state);
         }
 
-        if states.len() != 4 || states.is_empty() {
+        if states.len() != 4 {
             states.push(self.clone());
         }
         // println!("{:?}", states);
@@ -192,16 +197,29 @@ impl<const R: usize> Blueprint<R> {
         )
     }
 
-    fn score(&self) -> usize {
-        // self.pack.ore
-        //     + self.pack.clay * self.costs.clay
-        //     + self.costs.obsidian_ore_cost() * self.pack.obsidian
-        //     + self.costs.geode_ore_cost() * self.pack.geode
-        self.pack.geode + self.rates.geode * (R - self.minutes)
+    fn minutes_left(&self) -> usize {
+        R - self.minutes
     }
 
-    fn score_obsidian(&self) -> usize {
-        self.pack.obsidian + self.rates.obsidian * (R - self.minutes)
+    fn possible_geode(&self) -> usize {
+        self.pack.geode + self.rates.geode * self.minutes_left()
+    }
+    fn possible_obsidian(&self) -> usize {
+        self.pack.obsidian + self.rates.obsidian * self.minutes_left()
+    }
+    fn possible_clay(&self) -> usize {
+        self.pack.clay + self.rates.clay * self.minutes_left()
+    }
+    fn possible_ore(&self) -> usize {
+        self.pack.ore + self.rates.ore * self.minutes_left()
+    }
+
+    fn score(&self) -> usize {
+        self.possible_ore()
+            + self.possible_clay() * self.costs.clay_ore_cost()
+            + self.possible_obsidian() * self.costs.obsidian_ore_cost()
+            + self.possible_geode() * self.costs.geode_ore_cost()
+        // self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 }
 
@@ -209,7 +227,7 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        // return "".to_string();
+        return "".to_string();
         let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
             .into_par_iter()
@@ -239,10 +257,11 @@ impl Day for Day19 {
                             max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                             if state.minutes < 24 {
                                 if state.minutes < 24 / 2 + 2
-                                    && state.score_obsidian()
+                                    && state.possible_obsidian()
                                         >= best_obsidian.load(Ordering::Relaxed)
                                 {
-                                    best_obsidian.store(state.score_obsidian(), Ordering::Relaxed);
+                                    best_obsidian
+                                        .store(state.possible_obsidian(), Ordering::Relaxed);
                                     Some(state)
                                 } else if state.score() >= best.load(Ordering::Relaxed) {
                                     best.store(state.score(), Ordering::Relaxed);
@@ -280,7 +299,7 @@ impl Day for Day19 {
                 let max_geode = AtomicUsize::new(0);
                 let best = AtomicUsize::new(0);
                 let best_obsidian = AtomicUsize::new(0);
-                // let mut log_file = std::fs::File::create("log.log").unwrap();
+                let mut log_file = std::fs::File::create("log.log").unwrap();
                 loop {
                     // dbg!(i);
                     dbg!(queue.len());
@@ -295,23 +314,33 @@ impl Day for Day19 {
                         .filter_map(|state| {
                             max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                             if state.minutes < 32 {
-                                if state.minutes < 32 / 2
-                                    && state.score_obsidian()
-                                        >= best_obsidian.load(Ordering::Relaxed)
-                                {
-                                    best_obsidian.store(state.score_obsidian(), Ordering::Relaxed);
-                                    Some(state)
-                                } else if state.score() >= best.load(Ordering::Relaxed) {
+                                // println!(
+                                //     "{} {} {} {} | {}",
+                                //     state.rates.ore,
+                                //     state.rates.clay,
+                                //     state.rates.obsidian,
+                                //     state.rates.geode,
+                                //     state.score()
+                                // );
+                                if state.score() >= best.load(Ordering::Relaxed) {
                                     best.store(state.score(), Ordering::Relaxed);
                                     Some(state)
                                 } else {
-                                    None
+                                    if state.rates.clay < 1 || state.rates.geode < 2 && state.minutes < 21 {
+                                        Some(state)
+                                    } else {
+                                        None
+                                    }
+                                    // None
                                 }
                             } else {
                                 None
                             }
                         });
                     queue.par_extend(new);
+                    // for state in &queue {
+                    //     writeln!(log_file, "{:?}", state).unwrap();
+                    // }
                 }
                 dbg!(best, &max_geode);
                 max_geode.load(Ordering::Acquire)

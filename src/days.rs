@@ -18,6 +18,7 @@ mod day_16b;
 mod day_17;
 mod day_18;
 mod day_19;
+mod day_19b;
 mod day_20;
 
 pub use day_01::Day01;
