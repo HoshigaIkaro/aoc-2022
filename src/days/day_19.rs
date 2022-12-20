@@ -1,6 +1,5 @@
 use std::{
     collections::{BinaryHeap, VecDeque},
-    io::Write,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -127,12 +126,8 @@ impl<const R: usize> Blueprint<R> {
 
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
-        // println!("{:?}", &self);
 
-        if self.can_buy_geode()
-        // && self.minutes > R / 2
-        {
-            // dbg!(self.minutes);
+        if self.can_buy_geode() {
             let mut state = self.clone();
             state.pack.ore -= self.costs.geode.0;
             state.pack.obsidian -= self.costs.geode.1;
@@ -146,33 +141,22 @@ impl<const R: usize> Blueprint<R> {
             state.action = Action::Obsidian;
             states.push(state);
         }
-        if self.can_buy_clay() && self.rates.clay < self.costs.obsidian.1
-        // && self.rates.clay / self.rates.ore < self.costs.obsidian.1 / self.costs.obsidian.0
-        // && self.pack.ore - self.rates.ore < self.costs.clay
-        // && self.minutes < R / 2 + 6
-        {
+        if self.can_buy_clay() && self.rates.clay < self.costs.obsidian.1 {
             let mut state = self.clone();
             state.pack.ore -= self.costs.clay;
             state.action = Action::Clay;
             states.push(state);
         }
-        if self.can_buy_ore() && self.rates.ore < self.max_ore_cost()
-        // && self.pack.ore - self.rates.ore < self.costs.ore
-        {
+        if self.can_buy_ore() && self.rates.ore < self.max_ore_cost() {
             let mut state = self.clone();
             state.pack.ore -= self.costs.ore;
             state.action = Action::Ore;
             states.push(state);
         }
 
-        if states.len() != 4
-            || (self.pack.ore + self.rates.ore >= self.costs.geode.0
-                && self.pack.obsidian + self.rates.obsidian >= self.costs.geode.1)
-        {
+        if states.len() != 4 {
             states.push(self.clone());
         }
-
-        // println!("{:?}", states);
 
         states
             .into_iter()
@@ -222,7 +206,6 @@ impl<const R: usize> Blueprint<R> {
             + self.possible_clay() * self.costs.clay_ore_cost()
             + self.possible_obsidian() * self.costs.obsidian_ore_cost()
             + self.possible_geode() * self.costs.geode_ore_cost()
-        // self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 }
 
@@ -242,55 +225,37 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        return "".to_string();
         let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
             .into_par_iter()
             .map(|blueprint| {
-                println!(
-                    "On blueprint {} -----------------------------------",
-                    blueprint.id
-                );
-                let mut queue = VecDeque::new();
-                queue.push_back(blueprint);
+                let mut queue = BinaryHeap::new();
+                queue.push(blueprint);
                 let max_geode = AtomicUsize::new(0);
-                let best = AtomicUsize::new(0);
-                let best_obsidian = AtomicUsize::new(0);
-                // let mut log_file = std::fs::File::create("log.log").unwrap();
                 loop {
-                    // dbg!(i);
-                    dbg!(queue.len());
                     if queue.is_empty() {
                         break;
                     }
-                    let new = queue.split_off(0);
+                    let mut new = Vec::new();
+                    for _ in 0..queue.len().min(500) {
+                        let state = queue.pop().unwrap();
+                        new.push(state);
+                    }
+                    queue.clear();
                     let new = new
                         .into_par_iter()
                         .flat_map(|mut state| state.advance())
                         .into_par_iter()
                         .filter_map(|state| {
-                            max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                             if state.minutes < 24 {
-                                if state.minutes < 24 / 2 + 2
-                                    && state.possible_obsidian()
-                                        >= best_obsidian.load(Ordering::Relaxed)
-                                {
-                                    best_obsidian
-                                        .store(state.possible_obsidian(), Ordering::Relaxed);
-                                    Some(state)
-                                } else if state.score() >= best.load(Ordering::Relaxed) {
-                                    best.store(state.score(), Ordering::Relaxed);
-                                    Some(state)
-                                } else {
-                                    None
-                                }
+                                Some(state)
                             } else {
+                                max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
                                 None
                             }
                         });
                     queue.par_extend(new);
                 }
-                dbg!(best, &max_geode);
                 let quality = blueprint.id * max_geode.load(Ordering::Acquire);
                 quality
             })
@@ -299,24 +264,15 @@ impl Day for Day19 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        // todo!();
         let blueprints = parse_blueprints::<32>(input);
         let total: usize = blueprints
             .into_iter()
             .take(3)
             .map(|blueprint| {
-                println!(
-                    "On blueprint {} -----------------------------------",
-                    blueprint.id
-                );
                 let mut queue = BinaryHeap::new();
                 queue.push(blueprint);
                 let max_geode = AtomicUsize::new(0);
-                let best = AtomicUsize::new(0);
-                let mut log_file = std::fs::File::create("log.log").unwrap();
                 loop {
-                    // dbg!(i);
-                    dbg!(queue.len());
                     if queue.is_empty() {
                         break;
                     }
@@ -339,14 +295,7 @@ impl Day for Day19 {
                             }
                         });
                     queue.par_extend(new);
-                    for state in &queue {
-                        if state.pack.geode == 55 {
-                            println!("{:?}", state);
-                        }
-                        // writeln!(log_file, "{:?}", state).unwrap();
-                    }
                 }
-                dbg!(best, &max_geode);
                 max_geode.load(Ordering::Acquire)
             })
             .product();
