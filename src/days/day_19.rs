@@ -64,7 +64,7 @@ enum Action {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Blueprint {
+struct Blueprint<const R: usize> {
     id: usize,
     costs: Costs,
     rates: Rates,
@@ -73,7 +73,7 @@ struct Blueprint {
     action: Action,
 }
 
-impl Blueprint {
+impl<const R: usize> Blueprint<R> {
     fn new(
         id: usize,
         ore_cost: usize,
@@ -101,7 +101,7 @@ impl Blueprint {
     fn advance(&mut self) -> Vec<Self> {
         let mut states = Vec::new();
         states.push(self.clone());
-        if self.minutes != 24 {
+        if self.minutes != R {
             if self.pack.ore >= self.costs.geode.0 && self.pack.obsidian >= self.costs.geode.1 {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.geode.0;
@@ -111,8 +111,7 @@ impl Blueprint {
             }
             if self.pack.ore >= self.costs.obsidian.0
                 && self.pack.clay >= self.costs.obsidian.1
-                && self.rates.obsidian < self.costs.geode.1
-            // && self.rates.obsidian < self.costs.geode.1
+                // && self.rates.obsidian < self.costs.geode.1
             {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.obsidian.0;
@@ -121,15 +120,17 @@ impl Blueprint {
                 states.push(state);
             }
             if self.pack.ore >= self.costs.clay
-                && self.rates.clay < self.costs.obsidian.1
-                && self.minutes < 16
+                // && self.rates.clay < self.costs.obsidian.1
+                // && self.minutes < R / 2 + 10
             {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.clay;
                 state.action = Action::Clay;
                 states.push(state);
             }
-            if self.pack.ore >= self.costs.ore && self.rates.ore < 4 && self.minutes < 15 {
+            if self.pack.ore >= self.costs.ore 
+            // && self.minutes < R / 2 + 8 
+            {
                 let mut state = self.clone();
                 state.pack.ore -= self.costs.ore;
                 state.action = Action::Ore;
@@ -156,7 +157,7 @@ impl Blueprint {
 
     fn score(&self) -> usize {
         // (self.rates.ore + self.rates.clay * 4 +
-        self.pack.geode + self.rates.geode * (24 - self.minutes)
+        self.pack.geode + self.rates.geode * (R - self.minutes)
     }
 }
 
@@ -164,7 +165,8 @@ pub struct Day19;
 
 impl Day for Day19 {
     fn part_1(&self, input: &str) -> String {
-        let blueprints = parse_blueprints(input);
+        return "".to_string();
+        let blueprints = parse_blueprints::<24>(input);
         let total: usize = blueprints
             .into_iter()
             .map(|blueprint| {
@@ -176,11 +178,10 @@ impl Day for Day19 {
                 queue.push_back(blueprint);
                 let max_geode = AtomicUsize::new(0);
                 let best = AtomicUsize::new(0);
-                let mut i = 0;
                 // let mut log_file = std::fs::File::create("log.log").unwrap();
                 loop {
-                    dbg!(i);
-                    dbg!(queue.len());
+                    // dbg!(i);
+                    // dbg!(queue.len());
                     if queue.is_empty() {
                         break;
                     }
@@ -207,10 +208,8 @@ impl Day for Day19 {
                             }
                         });
                     queue.par_extend(new);
-
-                    i += 1;
                 }
-                dbg!(best, &max_geode);
+                // dbg!(best, &max_geode);
                 let quality = blueprint.id * max_geode.load(Ordering::Acquire);
                 quality
             })
@@ -219,11 +218,59 @@ impl Day for Day19 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        todo!()
+        let blueprints = parse_blueprints::<32>(input);
+        let total: usize = blueprints
+            .into_iter()
+            .take(3)
+            .map(|blueprint| {
+                println!(
+                    "On blueprint {} -----------------------------------",
+                    blueprint.id
+                );
+                let mut queue = VecDeque::new();
+                queue.push_back(blueprint);
+                let max_geode = AtomicUsize::new(0);
+                let best = AtomicUsize::new(0);
+                // let mut log_file = std::fs::File::create("log.log").unwrap();
+                loop {
+                    // dbg!(i);
+                    dbg!(queue.len());
+                    if queue.is_empty() {
+                        break;
+                    }
+                    let new = queue.split_off(0);
+                    let new = new
+                        .into_par_iter()
+                        .flat_map(|mut state| state.advance())
+                        .into_par_iter()
+                        .filter_map(|state| {
+                            max_geode.fetch_max(state.pack.geode, Ordering::Relaxed);
+                            if state.minutes < 32 {
+                                let c_best = best.load(Ordering::Relaxed);
+                                let score = state.score();
+                                if score > c_best {
+                                    best.store(state.score(), Ordering::Relaxed);
+                                    Some(state)
+                                } else if c_best == score {
+                                    Some(state)
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
+                        });
+                    queue.par_extend(new);
+                }
+                dbg!(best, &max_geode);
+                max_geode.load(Ordering::Acquire)
+            })
+            .product();
+        total.to_string()
     }
 }
 
-fn parse_blueprints(input: &str) -> Vec<Blueprint> {
+fn parse_blueprints<const R: usize>(input: &str) -> Vec<Blueprint<R>> {
     input
         .lines()
         .map(|line| {
@@ -239,9 +286,9 @@ fn parse_blueprints(input: &str) -> Vec<Blueprint> {
                 .map(|s| usize::from_str_radix(s, 10).unwrap());
             let ore = numbers.next().unwrap();
             let clay = numbers.next().unwrap();
-            dbg!(clay);
+            // dbg!(clay);
             let obsidian = (numbers.next().unwrap(), numbers.next().unwrap());
-            dbg!(obsidian);
+            // dbg!(obsidian);
             let geode = (numbers.next().unwrap(), numbers.next().unwrap());
             Blueprint::new(id, ore, clay, obsidian, geode)
         })
