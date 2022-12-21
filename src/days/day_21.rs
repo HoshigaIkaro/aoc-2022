@@ -35,17 +35,14 @@ impl<'a> Value<'a> {
                 } else {
                     let left = monkeys[left].get_unless_human(monkeys);
                     let right = monkeys[right].get_unless_human(monkeys);
-                    if left.is_none() || right.is_none() {
-                        None
-                    } else {
-                        let left = left.unwrap();
-                        let right = right.unwrap();
-                        Some(match op {
+                    match (left, right) {
+                        (Some(left), Some(right)) => Some(match op {
                             Op::Add => left + right,
                             Op::Minus => left - right,
                             Op::Multiply => left * right,
                             Op::Divide => left / right,
-                        })
+                        }),
+                        _ => None,
                     }
                 }
             }
@@ -65,17 +62,6 @@ enum Op {
     Minus,
     Multiply,
     Divide,
-}
-
-impl Op {
-    fn reverse(&self) -> Self {
-        match self {
-            Op::Add => Op::Minus,
-            Op::Minus => Op::Add,
-            Op::Multiply => Op::Divide,
-            Op::Divide => Op::Multiply,
-        }
-    }
 }
 
 pub struct Day21;
@@ -101,21 +87,21 @@ impl Day for Day21 {
                 let value = &monkeys[container];
                 if value.contains("humn") {
                     if let Value::Binary(op, left, right) = value {
-                        if *left != "humn" {
-                            let value = monkeys[left].get(&monkeys);
-                            target_value = match op {
-                                Op::Add => target_value - value,
-                                Op::Minus => value - target_value,
-                                Op::Multiply => target_value / value,
-                                Op::Divide => value / target_value,
-                            };
-                        } else {
+                        if *left == "humn" {
                             let value = monkeys[right].get(&monkeys);
                             target_value = match op {
                                 Op::Add => target_value - value,
                                 Op::Minus => target_value + value,
                                 Op::Multiply => target_value / value,
                                 Op::Divide => value * target_value,
+                            };
+                        } else {
+                            let value = monkeys[left].get(&monkeys);
+                            target_value = match op {
+                                Op::Add => target_value - value,
+                                Op::Minus => value - target_value,
+                                Op::Multiply => target_value / value,
+                                Op::Divide => value / target_value,
                             };
                         }
                         break;
