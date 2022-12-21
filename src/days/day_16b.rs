@@ -39,14 +39,15 @@ struct Connection {
 }
 
 type Connections<'a> = HashMap<&'a str, HashMap<&'a str, Connection>>;
+type Start<'a> = HashMap<&'a str, Connection>;
 
 /// Calculates the distance between the non-zero valves.
 /// Removes all valves with zero flow rate.
-fn simplify_valves(valves: Valves) -> Connections {
+fn simplify_valves(valves: Valves) -> (Start, Connections) {
     let mut connections: Connections = HashMap::new();
     for source in valves.keys() {
         // only want useful valves
-        if valves[source].flow_rate != 0 {
+        if valves[source].flow_rate != 0 || *source == "AA" {
             // calculate the distance for each target
             for target in valves.keys() {
                 // except for targets with zero flow rate
@@ -59,8 +60,8 @@ fn simplify_valves(valves: Valves) -> Connections {
             }
         }
     }
-
-    connections
+    let start = connections.remove("AA").unwrap();
+    (start, connections)
 }
 
 fn find_connection<'a>(
@@ -90,7 +91,7 @@ fn find_connection<'a>(
     }
 }
 
-fn parse_simplified_valves(input: &str) -> Connections {
+fn parse_simplified_valves(input: &str) -> (Start, Connections) {
     let valves = parse_valves(input);
     simplify_valves(valves)
 }
@@ -151,12 +152,12 @@ impl<'a> Ord for State<'a> {
     }
 }
 
-fn traverse<'a>(connections: &'a Connections<'a>, valves: Vec<&'a str>) -> State<'a> {
+fn traverse<'a>(connections: &'a Connections<'a>, start: Start) -> State<'a> {
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
-    for (i, v) in valves.iter().enumerate() {
-        let mut remaining = valves.clone();
+    for (i, v) in connections.keys().enumerate() {
+        let mut remaining = connections.keys().copied().collect::<Vec<_>>();
         remaining.remove(i);
-        let state = State::new(*v, remaining, 0);
+        let state = State::new(*v, remaining, start[v].distance);
         queue.push(state);
     }
 
@@ -190,11 +191,9 @@ fn traverse<'a>(connections: &'a Connections<'a>, valves: Vec<&'a str>) -> State
             }
             // move to the new value
             state.current_valve = new_valve;
-            state.elapsed_minutes += connection.distance;
-            state.pressure += state.flow_rate * connection.distance;
+            state.elapsed_minutes += connection.distance + 1;
+            state.pressure += state.flow_rate * (connection.distance) + 1;
             // turn the valve
-            state.elapsed_minutes += 1;
-            state.pressure += state.flow_rate;
             state.remaining.remove(i);
             state.flow_rate += connection.flow_rate;
 
@@ -213,10 +212,8 @@ fn traverse<'a>(connections: &'a Connections<'a>, valves: Vec<&'a str>) -> State
 pub struct Day16;
 impl Day for Day16 {
     fn part_1(&self, input: &str) -> String {
-        let connections = parse_simplified_valves(input);
-        traverse(&connections, connections.keys().copied().collect())
-            .final_pressure()
-            .to_string()
+        let (start, connections) = parse_simplified_valves(input);
+        traverse(&connections, start).final_pressure().to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
