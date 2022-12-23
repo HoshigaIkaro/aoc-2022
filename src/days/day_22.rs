@@ -117,7 +117,10 @@ impl Grove<Flat> {
         match step {
             Step::Literal(steps) => {
                 for _ in 0..steps {
-                    self.move_forward();
+                    let moved = self.move_forward();
+                    if !moved {
+                        break;
+                    }
                 }
             }
             Step::TurnLeft => self.turn_left(),
@@ -125,7 +128,7 @@ impl Grove<Flat> {
         }
     }
 
-    fn move_forward(&mut self) {
+    fn move_forward(&mut self) -> bool {
         let mut new_point = match self.direction {
             Direction::Up => (self.x, self.y - 1),
             Direction::Down => (self.x, self.y + 1),
@@ -171,6 +174,9 @@ impl Grove<Flat> {
         }
         if self.open_point(new_point) {
             (self.x, self.y) = new_point;
+            true
+        } else {
+            false
         }
     }
 }
@@ -180,7 +186,10 @@ impl Grove<Cube> {
         match step {
             Step::Literal(steps) => {
                 for _ in 0..steps {
-                    self.move_forward();
+                    let moved = self.move_forward();
+                    if !moved {
+                        break;
+                    }
                 }
             }
             Step::TurnLeft => self.turn_left(),
@@ -188,7 +197,7 @@ impl Grove<Cube> {
         }
     }
 
-    fn move_forward(&mut self) {
+    fn move_forward(&mut self) -> bool {
         let mut new_point = match self.direction {
             Direction::Up => (self.x, self.y - 1),
             Direction::Down => (self.x, self.y + 1),
@@ -265,6 +274,9 @@ impl Grove<Cube> {
         if self.open_point(new_point) {
             (self.x, self.y) = new_point;
             self.direction = new_direction;
+            true
+        } else {
+            false
         }
     }
 }
