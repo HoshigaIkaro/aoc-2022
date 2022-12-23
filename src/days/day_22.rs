@@ -341,7 +341,9 @@ fn parse_steps(input: &str) -> Vec<Step> {
             c => buf.push(c),
         }
     }
-    // last step
-    steps.push(Step::Literal(buf.parse().unwrap()));
+    // last step if exists
+    if !buf.is_empty() {
+        steps.push(Step::Literal(buf.parse().unwrap()));
+    }
     steps
 }
