@@ -116,7 +116,6 @@ impl Elf {
 
 #[derive(Debug)]
 enum ProposalState {
-    None,
     One(usize),
     Multiple,
 }
@@ -135,11 +134,14 @@ fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, ProposalS
         .collect::<Vec<_>>()
         .into_iter()
         .fold(FxHashMap::default(), |mut proposed, (new_point, id)| {
-            let state = proposed.entry(new_point).or_insert(ProposalState::None);
-            match state {
-                ProposalState::None => *state = ProposalState::One(id),
-                ProposalState::One(_) => *state = ProposalState::Multiple,
-                ProposalState::Multiple => (),
+            let state = proposed.get_mut(&new_point);
+            if let Some(state) = state {
+                match state {
+                    ProposalState::One(_) => *state = ProposalState::Multiple,
+                    ProposalState::Multiple => (),
+                }
+            } else {
+                proposed.insert(new_point, ProposalState::One(id));
             }
             proposed
         })
