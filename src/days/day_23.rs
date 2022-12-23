@@ -163,9 +163,9 @@ pub struct Day23;
 impl Day for Day23 {
     fn part_1(&self, input: &str) -> String {
         let mut elves = parse_elves(input);
-        for round in 1..=10 {
+        for round in 0..10 {
             // first half
-            let proposals = generate_proposals(&elves, round - 1);
+            let proposals = generate_proposals(&elves, round);
 
             // second half
             apply_proposals(&mut elves, &proposals);
@@ -186,10 +186,10 @@ impl Day for Day23 {
 
     fn part_2(&self, input: &str) -> String {
         let mut elves = parse_elves(input);
-        let mut round = 1;
+        let mut round = 0;
         loop {
             // first half
-            let proposals = generate_proposals(&elves, round - 1);
+            let proposals = generate_proposals(&elves, round);
 
             // second half
             let moved = apply_proposals(&mut elves, &proposals);
@@ -198,7 +198,7 @@ impl Day for Day23 {
             }
             round += 1;
         }
-        round.to_string()
+        round.add(1).to_string()
     }
 }
 
