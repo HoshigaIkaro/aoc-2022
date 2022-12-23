@@ -1,4 +1,6 @@
-use std::{collections::HashMap, ops::Add};
+use std::ops::Add;
+
+use rustc_hash::FxHashMap;
 
 use super::Day;
 
@@ -47,7 +49,7 @@ impl Direction {
 struct Elf {
     id: usize,
     position: Point,
-    directions: Vec<Direction>,
+    directions: [Direction; 4],
 }
 
 impl Elf {
@@ -55,7 +57,7 @@ impl Elf {
         Self {
             id,
             position,
-            directions: vec![
+            directions: [
                 Direction::North,
                 Direction::South,
                 Direction::West,
@@ -64,7 +66,7 @@ impl Elf {
         }
     }
 
-    fn deltas_around(&self) -> [Point; 8] {
+    const fn deltas_around(&self) -> [Point; 8] {
         [
             Point(0, 1),   // S
             Point(1, 1),   // SE
@@ -77,16 +79,18 @@ impl Elf {
         ]
     }
 
-    fn any_elves_around(&self, elves: &HashMap<Id, Elf>) -> bool {
+    fn any_elves_around(&self, elves: &FxHashMap<Id, Elf>) -> bool {
         self.deltas_around().into_iter().any(|delta| {
             let new = self.position + delta;
             elves.values().any(|elf| elf.position == new)
         })
     }
 
-    fn propose(&self, elves: &HashMap<Id, Elf>, proposed: &mut HashMap<Point, Vec<Id>>) {
+    fn propose(&self, elves: &FxHashMap<Id, Elf>, proposed: &mut FxHashMap<Point, Vec<Id>>, start_index:usize) {
         if self.any_elves_around(elves) {
-            for direction in &self.directions {
+            for index in 0..4 {
+                let new_index = (start_index + index) % 4;
+                let direction = self.directions[new_index];
                 if direction.deltas_to_check().into_iter().all(|delta| {
                     let new = self.position + delta;
                     elves.values().all(|elf| elf.position != new)
@@ -99,11 +103,6 @@ impl Elf {
             }
         }
     }
-
-    fn cycle_directions(&mut self) {
-        let dir = self.directions.remove(0);
-        self.directions.push(dir);
-    }
 }
 
 pub struct Day23;
@@ -111,19 +110,18 @@ pub struct Day23;
 impl Day for Day23 {
     fn part_1(&self, input: &str) -> String {
         let mut elves = parse_elves(input);
-        for _round in 0..10 {
+        for round in 0..10 {
             // first half
-            let mut proposed = HashMap::new();
+            let mut proposed = FxHashMap::default();
             for elf in elves.values() {
-                elf.propose(&elves, &mut proposed);
+                elf.propose(&elves, &mut proposed, round % 4);
             }
 
             // second half
             for (point, elf_ids) in proposed {
-                if let [elf_id] = elf_ids.as_slice() { elves.get_mut(elf_id).unwrap().position = point }
-            }
-            for elf in elves.values_mut() {
-                elf.cycle_directions();
+                if let [elf_id] = elf_ids.as_slice() {
+                    elves.get_mut(elf_id).unwrap().position = point
+                }
             }
         }
         // display_elves(&elves);
@@ -145,9 +143,9 @@ impl Day for Day23 {
         let mut round = 1;
         let first = loop {
             // first half
-            let mut proposed = HashMap::new();
+            let mut proposed = FxHashMap::default();
             for elf in elves.values() {
-                elf.propose(&elves, &mut proposed);
+                elf.propose(&elves, &mut proposed,round % 4);
             }
 
             if proposed.is_empty() {
@@ -160,17 +158,14 @@ impl Day for Day23 {
                     elves.get_mut(elf_id).unwrap().position = point
                 }
             }
-            for elf in elves.values_mut() {
-                elf.cycle_directions();
-            }
             round += 1;
         };
         first.to_string()
     }
 }
 
-fn parse_elves(input: &str) -> HashMap<Id, Elf> {
-    let mut elves = HashMap::new();
+fn parse_elves(input: &str) -> FxHashMap<Id, Elf> {
+    let mut elves = FxHashMap::default();
     let mut id = 0;
     for (y, row) in input.lines().enumerate() {
         for (x, tile) in row.chars().enumerate() {
@@ -184,7 +179,7 @@ fn parse_elves(input: &str) -> HashMap<Id, Elf> {
     elves
 }
 
-fn display_elves(elves: &HashMap<Id, Elf>) {
+fn display_elves(elves: &FxHashMap<Id, Elf>) {
     let min_x = elves.values().map(|elf| elf.position.0).min().unwrap();
     let max_x = elves.values().map(|elf| elf.position.0).max().unwrap();
     let min_y = elves.values().map(|elf| elf.position.1).min().unwrap();
