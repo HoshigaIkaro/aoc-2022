@@ -25,7 +25,7 @@ impl Display for Tile {
 
 type Point = (usize, usize);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Direction {
     Up = 3,
     Down = 1,
@@ -88,6 +88,38 @@ impl Grove {
         self.get(point) == Tile::Open
     }
 
+    fn advance(&mut self, step: Step, is_cube: bool) {
+        match step {
+            Step::Literal(steps) => {
+                if !is_cube {
+                    for _ in 0..steps {
+                        self.move_forward();
+                    }
+                } else {
+                    for _ in 0..steps {
+                        self.move_forward_cube();
+                    }
+                }
+            }
+            Step::TurnLeft => {
+                self.direction = match self.direction {
+                    Direction::Up => Direction::Left,
+                    Direction::Down => Direction::Right,
+                    Direction::Left => Direction::Down,
+                    Direction::Right => Direction::Up,
+                }
+            }
+            Step::TurnRight => {
+                self.direction = match self.direction {
+                    Direction::Up => Direction::Right,
+                    Direction::Down => Direction::Left,
+                    Direction::Left => Direction::Up,
+                    Direction::Right => Direction::Down,
+                }
+            }
+        }
+    }
+
     fn move_forward(&mut self) {
         let mut new_point = match self.direction {
             Direction::Up => (self.x, self.y - 1),
@@ -141,29 +173,117 @@ impl Grove {
         }
     }
 
-    fn advance(&mut self, step: Step) {
-        match step {
-            Step::Literal(steps) => {
-                for _ in 0..steps {
-                    self.move_forward();
-                }
+    fn move_forward_cube(&mut self) {
+        let mut new_point = match self.direction {
+            Direction::Up => (self.x, self.y - 1),
+            Direction::Down => (self.x, self.y + 1),
+            Direction::Left => (self.x - 1, self.y),
+            Direction::Right => (self.x + 1, self.y),
+        };
+        let mut new_direction = self.direction;
+        if self.get(new_point) == Tile::Nothing {
+            match self.direction {
+                Direction::Up => match self.x {
+                    // Check
+                    1..=50 => {
+                        new_point.0 = 51;
+                        new_point.1 = 50 + self.x;
+                        new_direction = Direction::Right;
+                    }
+                    // Check
+                    51..=100 => {
+                        new_point.0 = 1;
+                        new_point.1 = 100 + self.x;
+                        new_direction = Direction::Right;
+                    }
+                    // Check
+                    101..=150 => {
+                        new_point.0 = self.x - 100;
+                        new_point.1 = 200;
+                    }
+                    _ => unreachable!(),
+                },
+                Direction::Down => match self.x {
+                    // Check
+                    1..=50 => {
+                        new_point.0 += 100;
+                        new_point.1 = 1;
+                    }
+                    // Check
+                    51..=100 => {
+                        new_point.0 = 50;
+                        new_point.1 = self.x + 100;
+                        new_direction = Direction::Left;
+                    }
+                    // Check
+                    101..=150 => {
+                        new_point.0 = 100;
+                        new_point.1 = self.x - 50;
+                        new_direction = Direction::Left;
+                    }
+                    _ => unreachable!(),
+                },
+                Direction::Left => match self.y {
+                    // Check
+                    1..=50 => {
+                        new_point.0 = 1;
+                        new_point.1 = 151 - self.y;
+                        new_direction = Direction::Right;
+                    }
+                    // Check
+                    51..=100 => {
+                        new_point.0 = self.y - 50;
+                        new_point.1 = 101;
+                        new_direction = Direction::Down;
+                    },
+                    // Check
+                    101..=150 => {
+                        new_point.0 = 51;
+                        new_point.1 = 151 - self.y;
+                        new_direction = Direction::Right;
+                    },
+                    // Check
+                    151..=200 => {
+                        new_point.0 = self.y - 100;
+                        new_point.1 = 1;
+                        new_direction = Direction::Down;
+                    }
+                    _ => unreachable!(),
+                },
+                Direction::Right => match self.y {
+                    // Check
+                    1..=50 => {
+                        new_point.0 = 100;
+                        new_point.1 = 151 - self.y;
+                        new_direction = Direction::Left;
+                    },
+                    // Check
+                    51..=100 => {
+                        new_point.0 = self.y + 50;
+                        new_point.1 = 50;
+                        new_direction = Direction::Up;
+                    },
+                    // Check
+                    101..=150 => {
+                        new_point.0 = 150;
+                        new_point.1 = 151 - self.y;
+                        new_direction = Direction::Left;
+                    }
+                    // Check
+                    151..=200 => {
+                        new_point.0 = self.y - 100;
+                        new_point.1 = 150;
+                        new_direction = Direction::Up;
+                    }
+                    _ => unreachable!(),
+                },
             }
-            Step::TurnLeft => {
-                self.direction = match self.direction {
-                    Direction::Up => Direction::Left,
-                    Direction::Down => Direction::Right,
-                    Direction::Left => Direction::Down,
-                    Direction::Right => Direction::Up,
-                }
-            }
-            Step::TurnRight => {
-                self.direction = match self.direction {
-                    Direction::Up => Direction::Right,
-                    Direction::Down => Direction::Left,
-                    Direction::Left => Direction::Up,
-                    Direction::Right => Direction::Down,
-                }
-            }
+        }
+        // dbg!(new_point);
+        if self.open_point(new_point) {
+            // dbg!(new_point);
+            (self.x, self.y) = new_point;
+            self.direction = new_direction;
         }
     }
 }
@@ -197,18 +317,34 @@ impl Day for Day22 {
         let (map_input, steps_input) = input.split_once("\n\n").unwrap();
         let mut grove = Grove::new(map_input);
         for step in parse_steps(steps_input.trim()) {
-            grove.advance(step);
+            grove.advance(step, false);
         }
         let row = grove.y * 1000;
         let col = grove.x * 4;
         let facing = grove.direction as usize;
-        
+
         let password = row + col + facing;
         password.to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
-        todo!()
+        let (map_input, steps_input) = input.split_once("\n\n").unwrap();
+        let mut grove = Grove::new(map_input);
+        // grove.x = 50;
+        // grove.y = 200;
+        // grove.direction = Direction::Right;
+        // grove.move_forward_cube();
+        // println!("{grove}");
+        // todo!();
+        for step in parse_steps(steps_input.trim()) {
+            grove.advance(step, true);
+        }
+        let row = grove.y * 1000;
+        let col = grove.x * 4;
+        let facing = grove.direction as usize;
+
+        let password = row + col + facing;
+        password.to_string()
     }
 }
 
