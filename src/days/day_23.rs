@@ -177,7 +177,7 @@ fn parse_elves(input: &str) -> Vec<Elf> {
     elves
 }
 
-fn display_elves(elves: &FxHashMap<Id, Elf>) {
+fn display_elves(elves: &FxHashMap<usize, Elf>) {
     let min_x = elves.values().map(|elf| elf.position.0).min().unwrap();
     let max_x = elves.values().map(|elf| elf.position.0).max().unwrap();
     let min_y = elves.values().map(|elf| elf.position.1).min().unwrap();
