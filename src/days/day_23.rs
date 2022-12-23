@@ -1,5 +1,6 @@
 use std::ops::Add;
 
+use rayon::prelude::*;
 use rustc_hash::FxHashMap;
 
 use super::Day;
@@ -113,6 +114,25 @@ impl Elf {
     }
 }
 
+fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, Vec<usize>> {
+    elves
+        .par_iter()
+        .enumerate()
+        .filter_map(|(id, elf)| {
+            if let Some(new_point) = elf.propose(&elves, round % 4) {
+                Some((new_point, id))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+        .into_iter()
+        .fold(FxHashMap::default(), |mut proposed, (new_point, id)| {
+            proposed.entry(new_point).or_default().push(id);
+            proposed
+        })
+}
+
 pub struct Day23;
 
 impl Day for Day23 {
@@ -120,12 +140,7 @@ impl Day for Day23 {
         let mut elves = parse_elves(input);
         for round in 0..10 {
             // first half
-            let mut proposed: FxHashMap<Point, Vec<usize>> = FxHashMap::default();
-            for (id, elf) in elves.iter().enumerate() {
-                if let Some(new_point) = elf.propose(&elves, round % 4) {
-                    proposed.entry(new_point).or_default().push(id);
-                }
-            }
+            let proposed = generate_proposals(&elves, round);
 
             // second half
             for (point, elf_ids) in proposed {
@@ -153,12 +168,7 @@ impl Day for Day23 {
         let mut round = 1;
         loop {
             // first half
-            let mut proposed: FxHashMap<Point, Vec<usize>> = FxHashMap::default();
-            for (id, elf) in elves.iter().enumerate() {
-                if let Some(new_point) = elf.propose(&elves, round % 4) {
-                    proposed.entry(new_point).or_default().push(id);
-                }
-            }
+            let proposed = generate_proposals(&elves, round);
 
             if proposed.is_empty() {
                 break;
