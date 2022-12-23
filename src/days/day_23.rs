@@ -25,12 +25,15 @@ enum Direction {
 }
 
 impl Direction {
-    fn deltas_to_check(&self) -> [Point; 3] {
+    /// Gets the three indices to check.
+    ///
+    /// The bool array is assumed to be from west to east, north to south.
+    fn indicies_to_check(&self) -> [usize; 3] {
         match self {
-            Direction::North => [Point(0, -1), Point(1, -1), Point(-1, -1)],
-            Direction::South => [Point(0, 1), Point(1, 1), Point(-1, 1)],
-            Direction::West => [Point(-1, 0), Point(-1, 1), Point(-1, -1)],
-            Direction::East => [Point(1, 0), Point(1, 1), Point(1, -1)],
+            Direction::North => [0, 1, 2],
+            Direction::South => [5, 6, 7],
+            Direction::West => [0, 3, 5],
+            Direction::East => [2, 4, 7],
         }
     }
 
@@ -64,32 +67,41 @@ impl Elf {
 
     const fn deltas_around(&self) -> [Point; 8] {
         [
+            Point(-1, -1), // NW
+            Point(0, -1),  // N
+            Point(1, -1),  // NE
+            Point(-1, 0),  // W
+            Point(1, 0),   // E
+            Point(-1, 1),  // SW
             Point(0, 1),   // S
             Point(1, 1),   // SE
-            Point(1, 0),   // E
-            Point(1, -1),  // NE
-            Point(0, -1),  // N
-            Point(-1, -1), // NW
-            Point(-1, 0),  // W
-            Point(-1, 1),  // SW
         ]
     }
 
-    fn any_elves_around(&self, elves: &[Elf]) -> bool {
-        self.deltas_around().into_iter().any(|delta| {
-            let new = self.position + delta;
-            elves.iter().any(|elf| elf.position == new)
-        })
+    /// Returns whether the eight surrounding tiles are occupied.
+    ///
+    /// The array in in the order \[NW, N, NE, W, E, SW, S, SE\]
+    fn get_surrounding_elves(&self, elves: &[Elf]) -> [bool; 8] {
+        self.deltas_around()
+            .into_iter()
+            .map(|delta| {
+                let new = self.position + delta;
+                elves.iter().any(|elf| elf.position == new)
+            })
+            .collect::<Vec<bool>>()
+            .try_into()
+            .unwrap()
     }
 
     fn propose(&self, elves: &[Elf], start_index: usize) -> Option<Point> {
-        if self.any_elves_around(elves) {
+        let surrounding = self.get_surrounding_elves(elves);
+        if surrounding.iter().any(|occupied| *occupied) {
             for index in 0..4 {
                 let new_index = (start_index + index) % 4;
                 let direction = self.directions[new_index];
-                if direction.deltas_to_check().into_iter().all(|delta| {
-                    let new = self.position + delta;
-                    elves.iter().all(|elf| elf.position != new)
+                if direction.indicies_to_check().into_iter().all(|i| {
+                    let occupied = surrounding[i];
+                    !occupied
                 }) {
                     // can propose
                     let new = direction.new_point(self.position);
@@ -159,7 +171,7 @@ impl Day for Day23 {
                 }
             }
             round += 1;
-        };
+        }
         round.to_string()
     }
 }
