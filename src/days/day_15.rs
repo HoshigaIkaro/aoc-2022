@@ -182,14 +182,14 @@ fn parse_sensors(input: &str) -> Vec<Sensor> {
 
             let sensor = sensor.split_once(", ").unwrap();
             let sensor: (isize, isize) = (
-                sensor.0.strip_prefix("x=").unwrap().parse().unwrap(),
-                sensor.1.strip_prefix("y=").unwrap().parse().unwrap(),
+                lexical::parse(sensor.0.strip_prefix("x=").unwrap()).unwrap(),
+                lexical::parse(sensor.1.strip_prefix("y=").unwrap()).unwrap(),
             );
 
             let closest = closest.split_once(", ").unwrap();
             let closest: (isize, isize) = (
-                closest.0.strip_prefix("x=").unwrap().parse().unwrap(),
-                closest.1.strip_prefix("y=").unwrap().parse().unwrap(),
+                lexical::parse(closest.0.strip_prefix("x=").unwrap()).unwrap(),
+                lexical::parse(closest.1.strip_prefix("y=").unwrap()).unwrap(),
             );
 
             Sensor::new(sensor, closest)

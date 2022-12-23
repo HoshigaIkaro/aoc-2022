@@ -32,5 +32,7 @@ impl Day for Day04 {
 
 fn to_pair(input: &str) -> (usize, usize) {
     let (left, right) = input.split_once('-').unwrap();
-    (left.parse().unwrap(), right.parse().unwrap())
+    let left: usize = lexical::parse(left).unwrap();
+    let right: usize = lexical::parse(right).unwrap();
+    (left, right)
 }
