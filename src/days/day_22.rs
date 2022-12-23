@@ -85,6 +85,24 @@ impl Grove {
         self.get(point) == Tile::Open
     }
 
+    fn turn_left(&mut self) {
+        self.direction = match self.direction {
+            Direction::Up => Direction::Left,
+            Direction::Down => Direction::Right,
+            Direction::Left => Direction::Down,
+            Direction::Right => Direction::Up,
+        }
+    }
+
+    fn turn_right(&mut self) {
+        self.direction = match self.direction {
+            Direction::Up => Direction::Right,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+            Direction::Right => Direction::Down,
+        }
+    }
+
     fn advance(&mut self, step: Step, is_cube: bool) {
         match step {
             Step::Literal(steps) => {
@@ -98,22 +116,8 @@ impl Grove {
                     }
                 }
             }
-            Step::TurnLeft => {
-                self.direction = match self.direction {
-                    Direction::Up => Direction::Left,
-                    Direction::Down => Direction::Right,
-                    Direction::Left => Direction::Down,
-                    Direction::Right => Direction::Up,
-                }
-            }
-            Step::TurnRight => {
-                self.direction = match self.direction {
-                    Direction::Up => Direction::Right,
-                    Direction::Down => Direction::Left,
-                    Direction::Left => Direction::Up,
-                    Direction::Right => Direction::Down,
-                }
-            }
+            Step::TurnLeft => self.turn_left(),
+            Step::TurnRight => self.turn_right(),
         }
     }
 
