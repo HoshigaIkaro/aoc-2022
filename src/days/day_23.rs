@@ -145,6 +145,17 @@ fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, ProposalS
         })
 }
 
+fn apply_proposals(elves: &mut [Elf], proposals: &FxHashMap<Point, ProposalState>) -> bool {
+    let mut checked = false;
+    for (point, state) in proposals {
+        if let ProposalState::One(id) = state {
+            elves.get_mut(*id).unwrap().position = *point;
+            checked = true;
+        }
+    }
+    checked
+}
+
 pub struct Day23;
 
 impl Day for Day23 {
@@ -152,14 +163,10 @@ impl Day for Day23 {
         let mut elves = parse_elves(input);
         for round in 1..=10 {
             // first half
-            let proposed = generate_proposals(&elves, round - 1);
+            let proposals = generate_proposals(&elves, round - 1);
 
             // second half
-            for (point, state) in proposed {
-                if let ProposalState::One(id) = state {
-                    elves.get_mut(id).unwrap().position = point;
-                }
-            }
+            apply_proposals(&mut elves, &proposals);
         }
         // display_elves(&elves);
         let min_x = elves.iter().map(|elf| elf.position.0).min().unwrap();
@@ -180,17 +187,11 @@ impl Day for Day23 {
         let mut round = 1;
         loop {
             // first half
-            let proposed = generate_proposals(&elves, round - 1);
+            let proposals = generate_proposals(&elves, round - 1);
 
             // second half
-            let mut checked = false;
-            for (point, state) in proposed {
-                if let ProposalState::One(id) = state {
-                    elves.get_mut(id).unwrap().position = point;
-                    checked = true;
-                }
-            }
-            if !checked {
+            let moved = apply_proposals(&mut elves, &proposals);
+            if !moved {
                 break;
             }
             round += 1;
