@@ -8,7 +8,10 @@ impl Day for Day01 {
             .split("\n\n")
             .map(|elf| {
                 elf.lines()
-                    .map(|food| food.parse::<usize>().unwrap())
+                    .map(|food| {
+                        let food: usize = lexical::parse(food).unwrap();
+                        food
+                    })
                     .sum::<usize>()
             })
             .max()
@@ -21,7 +24,10 @@ impl Day for Day01 {
             .split("\n\n")
             .map(|elf| {
                 elf.lines()
-                    .map(|food| food.parse::<usize>().unwrap())
+                    .map(|food| {
+                        let food: usize = lexical::parse(food).unwrap();
+                        food
+                    })
                     .sum::<usize>()
             })
             .collect::<Vec<usize>>();
