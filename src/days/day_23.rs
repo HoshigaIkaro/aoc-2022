@@ -114,7 +114,14 @@ impl Elf {
     }
 }
 
-fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, Vec<usize>> {
+#[derive(Debug)]
+enum ProposalState {
+    None,
+    One(usize),
+    Multiple,
+}
+
+fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, ProposalState> {
     elves
         .par_iter()
         .enumerate()
@@ -128,7 +135,12 @@ fn generate_proposals(elves: &[Elf], round: usize) -> FxHashMap<Point, Vec<usize
         .collect::<Vec<_>>()
         .into_iter()
         .fold(FxHashMap::default(), |mut proposed, (new_point, id)| {
-            proposed.entry(new_point).or_default().push(id);
+            let state = proposed.entry(new_point).or_insert(ProposalState::None);
+            match state {
+                ProposalState::None => *state = ProposalState::One(id),
+                ProposalState::One(_) => *state = ProposalState::Multiple,
+                ProposalState::Multiple => (),
+            }
             proposed
         })
 }
@@ -138,14 +150,14 @@ pub struct Day23;
 impl Day for Day23 {
     fn part_1(&self, input: &str) -> String {
         let mut elves = parse_elves(input);
-        for round in 0..10 {
+        for round in 1..=10 {
             // first half
-            let proposed = generate_proposals(&elves, round);
+            let proposed = generate_proposals(&elves, round - 1);
 
             // second half
-            for (point, elf_ids) in proposed {
-                if let [elf_id] = elf_ids.as_slice() {
-                    elves.get_mut(*elf_id).unwrap().position = point
+            for (point, state) in proposed {
+                if let ProposalState::One(id) = state {
+                    elves.get_mut(id).unwrap().position = point;
                 }
             }
         }
@@ -168,17 +180,18 @@ impl Day for Day23 {
         let mut round = 1;
         loop {
             // first half
-            let proposed = generate_proposals(&elves, round);
-
-            if proposed.is_empty() {
-                break;
-            }
+            let proposed = generate_proposals(&elves, round - 1);
 
             // second half
-            for (point, elf_ids) in proposed {
-                if let [elf_id] = elf_ids.as_slice() {
-                    elves.get_mut(*elf_id).unwrap().position = point
+            let mut checked = false;
+            for (point, state) in proposed {
+                if let ProposalState::One(id) = state {
+                    elves.get_mut(id).unwrap().position = point;
+                    checked = true;
                 }
+            }
+            if !checked {
+                break;
             }
             round += 1;
         }
