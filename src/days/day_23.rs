@@ -120,10 +120,7 @@ impl Day for Day23 {
 
             // second half
             for (point, elf_ids) in proposed {
-                match elf_ids.as_slice() {
-                    [elf_id] => elves.get_mut(elf_id).unwrap().position = point,
-                    _ => (),
-                }
+                if let [elf_id] = elf_ids.as_slice() { elves.get_mut(elf_id).unwrap().position = point }
             }
             for elf in elves.values_mut() {
                 elf.cycle_directions();
@@ -159,9 +156,8 @@ impl Day for Day23 {
 
             // second half
             for (point, elf_ids) in proposed {
-                match elf_ids.as_slice() {
-                    [elf_id] => elves.get_mut(elf_id).unwrap().position = point,
-                    _ => (),
+                if let [elf_id] = elf_ids.as_slice() {
+                    elves.get_mut(elf_id).unwrap().position = point
                 }
             }
             for elf in elves.values_mut() {
