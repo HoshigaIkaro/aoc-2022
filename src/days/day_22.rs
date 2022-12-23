@@ -30,7 +30,7 @@ enum Direction {
     Right = 0,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Step {
     Literal(usize),
     TurnLeft,
@@ -88,13 +88,13 @@ impl Grove {
     fn advance(&mut self, step: Step, is_cube: bool) {
         match step {
             Step::Literal(steps) => {
-                if !is_cube {
+                if is_cube {
                     for _ in 0..steps {
-                        self.move_forward();
+                        self.move_forward_cube();
                     }
                 } else {
                     for _ in 0..steps {
-                        self.move_forward_cube();
+                        self.move_forward();
                     }
                 }
             }
@@ -135,14 +135,14 @@ impl Grove {
                             .iter()
                             .rev()
                             .position(|row| row[self.x] != Tile::Nothing)
-                            .unwrap()
+                            .unwrap();
                 }
                 Direction::Down => {
                     new_point.1 = self
                         .board
                         .iter()
                         .position(|row| row[self.x] != Tile::Nothing)
-                        .unwrap()
+                        .unwrap();
                 }
                 Direction::Left => {
                     new_point.0 = self.board[self.y].len()
@@ -151,13 +151,13 @@ impl Grove {
                             .iter()
                             .rev()
                             .position(|tile| *tile != Tile::Nothing)
-                            .unwrap()
+                            .unwrap();
                 }
                 Direction::Right => {
                     new_point.0 = self.board[self.y]
                         .iter()
                         .position(|tile| *tile != Tile::Nothing)
-                        .unwrap()
+                        .unwrap();
                 }
             }
         }
@@ -281,7 +281,7 @@ impl Display for Grove {
                     write!(f, "{tile}")?;
                 }
             }
-            writeln!(f, "")?
+            writeln!(f)?;
         }
         Ok(())
     }
