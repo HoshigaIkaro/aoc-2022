@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, marker::PhantomData};
 
 use super::Day;
 
@@ -37,15 +37,22 @@ enum Step {
     TurnRight,
 }
 
+trait Shape {}
+struct Flat {}
+struct Cube {}
+impl Shape for Flat {}
+impl Shape for Cube {}
+
 #[derive(Debug)]
-struct Grove {
+struct Grove<S: Shape> {
     board: Vec<Vec<Tile>>,
     x: usize,
     y: usize,
     direction: Direction,
+    s: PhantomData<S>,
 }
 
-impl Grove {
+impl<S: Shape> Grove<S> {
     fn new(map_input: &str) -> Self {
         let mut board = Vec::new();
         let mut max = 0;
@@ -74,6 +81,7 @@ impl Grove {
             x: start,
             y: 1,
             direction: Direction::Right,
+            s: PhantomData,
         }
     }
 
@@ -102,18 +110,14 @@ impl Grove {
             Direction::Right => Direction::Down,
         }
     }
+}
 
-    fn advance(&mut self, step: Step, is_cube: bool) {
+impl Grove<Flat> {
+    fn advance(&mut self, step: Step) {
         match step {
             Step::Literal(steps) => {
-                if is_cube {
-                    for _ in 0..steps {
-                        self.move_forward_cube();
-                    }
-                } else {
-                    for _ in 0..steps {
-                        self.move_forward();
-                    }
+                for _ in 0..steps {
+                    self.move_forward();
                 }
             }
             Step::TurnLeft => self.turn_left(),
@@ -169,8 +173,22 @@ impl Grove {
             (self.x, self.y) = new_point;
         }
     }
+}
 
-    fn move_forward_cube(&mut self) {
+impl Grove<Cube> {
+    fn advance(&mut self, step: Step) {
+        match step {
+            Step::Literal(steps) => {
+                for _ in 0..steps {
+                    self.move_forward();
+                }
+            }
+            Step::TurnLeft => self.turn_left(),
+            Step::TurnRight => self.turn_right(),
+        }
+    }
+
+    fn move_forward(&mut self) {
         let mut new_point = match self.direction {
             Direction::Up => (self.x, self.y - 1),
             Direction::Down => (self.x, self.y + 1),
@@ -182,80 +200,62 @@ impl Grove {
             match self.direction {
                 Direction::Up => match self.x {
                     1..=50 => {
-                        new_point.0 = 51;
-                        new_point.1 = 50 + self.x;
+                        new_point = (51, self.x + 50);
                         new_direction = Direction::Right;
                     }
                     51..=100 => {
-                        new_point.0 = 1;
-                        new_point.1 = 100 + self.x;
+                        new_point = (1, self.x + 100);
                         new_direction = Direction::Right;
                     }
-                    101..=150 => {
-                        new_point.0 = self.x - 100;
-                        new_point.1 = 200;
-                    }
+                    101..=150 => new_point = (self.x - 100, 200),
                     _ => unreachable!(),
                 },
                 Direction::Down => match self.x {
-                    1..=50 => {
-                        new_point.0 += 100;
-                        new_point.1 = 1;
-                    }
+                    1..=50 => new_point = (self.x + 100, 1),
                     51..=100 => {
-                        new_point.0 = 50;
-                        new_point.1 = self.x + 100;
+                        new_point = (50, self.x + 100);
                         new_direction = Direction::Left;
                     }
                     101..=150 => {
-                        new_point.0 = 100;
-                        new_point.1 = self.x - 50;
+                        new_point = (100, self.x - 50);
                         new_direction = Direction::Left;
                     }
                     _ => unreachable!(),
                 },
                 Direction::Left => match self.y {
                     1..=50 => {
-                        new_point.0 = 1;
-                        new_point.1 = 151 - self.y;
+                        new_point = (1, 151 - self.y);
                         new_direction = Direction::Right;
                     }
                     51..=100 => {
-                        new_point.0 = self.y - 50;
-                        new_point.1 = 101;
+                        new_point = (self.y - 50, 101);
                         new_direction = Direction::Down;
                     }
                     101..=150 => {
-                        new_point.0 = 51;
-                        new_point.1 = 151 - self.y;
+                        new_point = (51, 151 - self.y);
                         new_direction = Direction::Right;
                     }
                     151..=200 => {
-                        new_point.0 = self.y - 100;
-                        new_point.1 = 1;
+                        new_point = (self.y - 100, 1);
                         new_direction = Direction::Down;
                     }
                     _ => unreachable!(),
                 },
                 Direction::Right => match self.y {
                     1..=50 => {
-                        new_point.0 = 100;
-                        new_point.1 = 151 - self.y;
+                        new_point = (100, 151 - self.y);
                         new_direction = Direction::Left;
                     }
                     51..=100 => {
-                        new_point.0 = self.y + 50;
-                        new_point.1 = 50;
+                        new_point = (self.y + 50, 50);
                         new_direction = Direction::Up;
                     }
                     101..=150 => {
-                        new_point.0 = 150;
-                        new_point.1 = 151 - self.y;
+                        new_point = (150, 151 - self.y);
                         new_direction = Direction::Left;
                     }
                     151..=200 => {
-                        new_point.0 = self.y - 100;
-                        new_point.1 = 150;
+                        new_point = (self.y - 100, 150);
                         new_direction = Direction::Up;
                     }
                     _ => unreachable!(),
@@ -269,7 +269,7 @@ impl Grove {
     }
 }
 
-impl Display for Grove {
+impl<S: Shape> Display for Grove<S> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (y, row) in self.board.iter().enumerate() {
             for (x, tile) in row.iter().enumerate() {
@@ -296,9 +296,9 @@ pub struct Day22;
 impl Day for Day22 {
     fn part_1(&self, input: &str) -> String {
         let (map_input, steps_input) = input.split_once("\n\n").unwrap();
-        let mut grove = Grove::new(map_input);
+        let mut grove = Grove::<Flat>::new(map_input);
         for step in parse_steps(steps_input.trim()) {
-            grove.advance(step, false);
+            grove.advance(step);
         }
         let row = grove.y * 1000;
         let col = grove.x * 4;
@@ -310,9 +310,9 @@ impl Day for Day22 {
 
     fn part_2(&self, input: &str) -> String {
         let (map_input, steps_input) = input.split_once("\n\n").unwrap();
-        let mut grove = Grove::new(map_input);
+        let mut grove = Grove::<Cube>::new(map_input);
         for step in parse_steps(steps_input.trim()) {
-            grove.advance(step, true);
+            grove.advance(step);
         }
         let row = grove.y * 1000;
         let col = grove.x * 4;
