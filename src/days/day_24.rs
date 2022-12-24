@@ -251,6 +251,8 @@ pub struct Day24;
 
 impl Day for Day24 {
     fn part_1(&self, input: &str) -> String {
+        #[cfg(feature = "visualize")]
+        return String::new();
         let mut valley = Valley::new(input);
         traverse(valley.start(), valley.end(), &mut valley).to_string()
     }
@@ -325,7 +327,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
             }
         }
         minutes += 1;
-        std::thread::sleep(std::time::Duration::from_millis(250));
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
     minutes
 }
