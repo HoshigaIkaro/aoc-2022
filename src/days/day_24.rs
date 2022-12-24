@@ -1,5 +1,3 @@
-type Point = (usize, usize);
-
 use std::{collections::BinaryHeap, fmt::Display};
 
 #[cfg(feature = "visualize")]
@@ -8,6 +6,10 @@ use crossterm::{cursor, execute, terminal, ExecutableCommand};
 use std::io::{stdout, Write};
 
 use super::Day;
+
+const MAX_STATES: usize = 50;
+
+type Point = (usize, usize);
 
 #[derive(Debug, Clone, Copy)]
 enum Direction {
@@ -224,7 +226,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
     'outer: loop {
         valley.simulate_next();
         let mut best_states = Vec::new();
-        while best_states.len() < 100 && !queue.is_empty() {
+        while best_states.len() < MAX_STATES && !queue.is_empty() {
             let state = queue.pop().unwrap();
             if state.target == state.point {
                 break 'outer;
@@ -311,7 +313,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
         display_all(&valley, &queue.iter().map(|s| s.point).collect::<Vec<_>>());
         valley.simulate_next();
         let mut best_states = Vec::new();
-        while best_states.len() < 100 && !queue.is_empty() {
+        while best_states.len() < MAX_STATES && !queue.is_empty() {
             let state = queue.pop().unwrap();
             if state.target == state.point {
                 break 'outer;
@@ -335,8 +337,8 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
         minutes += 1;
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
-    std::thread::sleep(std::time::Duration::from_millis(100));
     execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
     display_all(&valley, &[valley.end()]);
+    std::thread::sleep(std::time::Duration::from_millis(500));
     minutes
 }
