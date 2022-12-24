@@ -28,3 +28,4 @@ crossterm = "0.25.0"
 
 [features]
 rayon = []
+visualize = []

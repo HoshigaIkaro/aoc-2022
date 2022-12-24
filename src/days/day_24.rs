@@ -213,22 +213,7 @@ impl Display for Valley {
     }
 }
 
-fn display_all(valley: &Valley, occupied: &[Point]) {
-    use owo_colors::OwoColorize;
-
-    let s = valley.to_string();
-    for (y, line) in s.lines().enumerate() {
-        for (x, tile) in line.chars().enumerate() {
-            if occupied.contains(&(x, y)) {
-                print!("{}", "█".purple());
-            } else {
-                print!("{tile}");
-            }
-        }
-        println!();
-    }
-}
-
+#[cfg(not(feature = "visualize"))]
 fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
     let mut minutes = 0;
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
@@ -280,7 +265,25 @@ impl Day for Day24 {
     }
 }
 
-fn visualize(input: &str) {
+#[cfg(feature = "visualize")]
+fn display_all(valley: &Valley, occupied: &[Point]) {
+    use owo_colors::OwoColorize;
+
+    let s = valley.to_string();
+    for (y, line) in s.lines().enumerate() {
+        for (x, tile) in line.chars().enumerate() {
+            if occupied.contains(&(x, y)) {
+                print!("{}", "█".fg_rgb::<186, 187, 241>());
+            } else {
+                print!("{tile}");
+            }
+        }
+        println!();
+    }
+}
+
+#[cfg(feature = "visualize")]
+fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
     use crossterm::{cursor, execute, ExecutableCommand};
     use std::io::{stdout, Write};
     let mut stdout = stdout();
@@ -292,12 +295,11 @@ fn visualize(input: &str) {
         cursor::Hide
     )
     .unwrap();
-
     let mut minutes = 0;
-    let mut valley = Valley::new(input);
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
-    queue.push(State::new((1, 0), (valley.width - 2, valley.height - 1)));
+    queue.push(State::new(start, target));
     'outer: loop {
+        execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
         display_all(&valley, &queue.iter().map(|s| s.point).collect::<Vec<_>>());
         valley.simulate_next();
         let mut best_states = Vec::new();
@@ -311,24 +313,19 @@ fn visualize(input: &str) {
             }
             best_states.push(state);
         }
-        println!(" {:0>3}", best_states.len());
         if best_states.is_empty() {
             break;
         }
         queue.clear();
         for state in best_states {
             for new_point in valley.valid_moves_at(state.point) {
-                eprintln!("{:?}", new_point);
                 let mut state = state;
                 state.point = new_point;
                 queue.push(state);
             }
         }
         minutes += 1;
-        eprintln!();
-        // display_all(&valley, &queue.iter().map(|s| s.point).collect::<Vec<_>>());
         std::thread::sleep(std::time::Duration::from_millis(250));
-        execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
     }
-    minutes.to_string();
+    minutes
 }
