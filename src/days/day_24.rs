@@ -252,7 +252,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
         queue.clear();
         for state in best_states {
             for new_point in valley.valid_moves_at(state.point) {
-                let mut state = state.clone();
+                let mut state = state;
                 state.point = new_point;
                 queue.push(state);
             }
@@ -274,8 +274,7 @@ impl Day for Day24 {
         let mut valley = Valley::new(input);
         let there = traverse(valley.start(), valley.end(), &mut valley);
         let back = 1 + traverse(valley.end(), valley.start(), &mut valley);
-        let there_again =1 +  traverse(valley.start(), valley.end(), &mut valley);
-        dbg!(there, back, there_again);
+        let there_again = 1 + traverse(valley.start(), valley.end(), &mut valley);
         let total = there + back + there_again;
         total.to_string()
     }
@@ -320,7 +319,7 @@ fn visualize(input: &str) {
         for state in best_states {
             for new_point in valley.valid_moves_at(state.point) {
                 eprintln!("{:?}", new_point);
-                let mut state = state.clone();
+                let mut state = state;
                 state.point = new_point;
                 queue.push(state);
             }
