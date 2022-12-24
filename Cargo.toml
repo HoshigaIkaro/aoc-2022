@@ -24,6 +24,7 @@ owo-colors = "3.5.0"
 rayon = "1.6.1"
 rustc-hash = "1.1.0"
 lexical = "6.1.1"
+crossterm = "0.25.0"
 
 [features]
 rayon = []
