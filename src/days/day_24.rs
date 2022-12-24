@@ -293,9 +293,9 @@ fn display_all(valley: &Valley, occupied: &[Point]) {
     for (y, line) in s.lines().enumerate() {
         for (x, tile) in line.chars().enumerate() {
             if occupied.contains(&(x, y)) {
-                print!("{}", "█".fg_rgb::<186, 187, 241>());
+                print!("{}", "E".fg_rgb::<166, 209, 137>());
             } else {
-                print!("{tile}");
+                print!("{}", tile.fg_rgb::<181, 191, 226>());
             }
         }
         println!();
@@ -335,7 +335,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
             }
         }
         minutes += 1;
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
     execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
     display_all(&valley, &[target]);
