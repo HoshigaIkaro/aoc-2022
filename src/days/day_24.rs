@@ -338,7 +338,7 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
     execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
-    display_all(&valley, &[valley.end()]);
+    display_all(&valley, &[target]);
     std::thread::sleep(std::time::Duration::from_millis(500));
     minutes
 }
