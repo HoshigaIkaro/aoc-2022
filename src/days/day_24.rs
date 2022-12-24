@@ -111,10 +111,10 @@ impl Valley {
 
     fn get_surrounding_points(&self, (x, y): Point) -> Vec<Point> {
         if y == 0 && x == 1 {
-            // start
+            // from start
             vec![(1, 1)]
         } else if y == self.height - 1 && x == self.width - 2 {
-            // end
+            // to end
             vec![(self.width - 2, self.height - 2)]
         } else {
             // in the valley
