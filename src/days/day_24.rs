@@ -2,7 +2,10 @@ type Point = (usize, usize);
 
 use std::{collections::BinaryHeap, fmt::Display};
 
-use crossterm::terminal;
+#[cfg(feature = "visualize")]
+use crossterm::{cursor, execute, terminal, ExecutableCommand};
+#[cfg(feature = "visualize")]
+use std::io::{stdout, Write};
 
 use super::Day;
 
@@ -258,6 +261,19 @@ impl Day for Day24 {
     }
 
     fn part_2(&self, input: &str) -> String {
+        #[cfg(feature = "visualize")]
+        {
+            let mut stdout = stdout();
+            execute!(
+                stdout,
+                terminal::Clear(terminal::ClearType::All),
+                cursor::MoveToColumn(0),
+                cursor::MoveToRow(0),
+                cursor::Hide
+            )
+            .unwrap();
+        }
+
         let mut valley = Valley::new(input);
         let there = traverse(valley.start(), valley.end(), &mut valley);
         let back = 1 + traverse(valley.end(), valley.start(), &mut valley);
@@ -286,17 +302,7 @@ fn display_all(valley: &Valley, occupied: &[Point]) {
 
 #[cfg(feature = "visualize")]
 fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
-    use crossterm::{cursor, execute, ExecutableCommand};
-    use std::io::{stdout, Write};
     let mut stdout = stdout();
-    execute!(
-        stdout,
-        terminal::Clear(terminal::ClearType::All),
-        cursor::MoveToColumn(0),
-        cursor::MoveToRow(0),
-        cursor::Hide
-    )
-    .unwrap();
     let mut minutes = 0;
     let mut queue: BinaryHeap<State> = BinaryHeap::new();
     queue.push(State::new(start, target));
@@ -327,7 +333,10 @@ fn traverse(start: Point, target: Point, valley: &mut Valley) -> usize {
             }
         }
         minutes += 1;
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(50));
     }
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    execute!(stdout, cursor::MoveToColumn(0), cursor::MoveToRow(0)).unwrap();
+    display_all(&valley, &[valley.end()]);
     minutes
 }
