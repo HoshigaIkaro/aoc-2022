@@ -1,4 +1,4 @@
-use std::{ops::Add, str::FromStr};
+use std::{iter::Sum, str::FromStr};
 
 use super::Day;
 
@@ -8,11 +8,9 @@ struct ParseSNAFUError;
 #[derive(Debug, PartialEq, Eq)]
 struct SNAFU(isize);
 
-impl Add for SNAFU {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self(self.0 + rhs.0)
+impl Sum for SNAFU {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        Self(iter.into_iter().map(|s| s.0).sum())
     }
 }
 
@@ -42,14 +40,13 @@ impl ToString for SNAFU {
         let mut num = self.0;
         let mut carry = 0;
         while num > 0 {
-            let base_five_digit = num % 5;
-            let mut sum = base_five_digit + carry;
+            let mut digit = num % 5 + carry;
             carry = 0;
-            if sum > 2 {
-                carry += 1;
-                sum -= 5;
+            if digit > 2 {
+                carry = 1;
+                digit -= 5;
             }
-            out += match sum {
+            out += match digit {
                 2 => "2",
                 1 => "1",
                 0 => "0",
@@ -72,15 +69,15 @@ pub struct Day25;
 
 impl Day for Day25 {
     fn part_1(&self, input: &str) -> String {
-        let sum: isize = input
+        input
             .lines()
-            .map(|line| SNAFU::from_str(line).unwrap().0)
-            .sum();
-        SNAFU(sum).to_string()
+            .map(|line| SNAFU::from_str(line).unwrap())
+            .sum::<SNAFU>()
+            .to_string()
     }
 
-    fn part_2(&self, input: &str) -> String {
-        todo!()
+    fn part_2(&self, _input: &str) -> String {
+        "No Part 2.".to_string()
     }
 }
 
