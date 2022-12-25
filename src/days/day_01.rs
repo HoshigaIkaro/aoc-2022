@@ -27,7 +27,8 @@ impl Day for Day01 {
                 })
             })
             .fold([0; 3], |mut top, elf| {
-                if let Some(index) = get_top_index(elf, top) {
+                let index = get_min_index(top);
+                if elf > top[index]{
                     top[index] = elf;
                 }
                 top
@@ -38,11 +39,14 @@ impl Day for Day01 {
     }
 }
 
-fn get_top_index(new: usize, top: [usize; 3]) -> Option<usize> {
-    for index in 0..3 {
-        if new > top[index] {
-            return Some(index);
+fn get_min_index(top: [usize; 3]) -> usize {
+    let mut lowest = usize::MAX;
+    let mut index = 0;
+    for current in 0..3 {
+        if top[current] < lowest {
+            index = current;
+            lowest = top[current];
         }
     }
-    None
+    index
 }
