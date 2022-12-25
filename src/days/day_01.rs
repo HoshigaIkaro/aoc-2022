@@ -7,12 +7,10 @@ impl Day for Day01 {
         input
             .split("\n\n")
             .map(|elf| {
-                elf.lines()
-                    .map(|food| {
-                        let food: usize = lexical::parse(food).unwrap();
-                        food
-                    })
-                    .sum::<usize>()
+                elf.lines().fold(0, |acc, food| {
+                    let food: usize = lexical::parse(food).unwrap();
+                    acc + food
+                })
             })
             .max()
             .unwrap()
@@ -20,18 +18,28 @@ impl Day for Day01 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let mut elves = input
-            .split("\n\n")
-            .map(|elf| {
-                elf.lines()
-                    .map(|food| {
-                        let food: usize = lexical::parse(food).unwrap();
-                        food
-                    })
-                    .sum::<usize>()
+        let elves = input.split("\n\n").map(|elf| {
+            elf.lines().fold(0, |acc, food| {
+                let food: usize = lexical::parse(food).unwrap();
+                acc + food
             })
-            .collect::<Vec<usize>>();
-        elves.sort_unstable();
-        elves.iter().rev().take(3).sum::<usize>().to_string()
+        });
+        let mut top = [0; 3];
+        for elf in elves {
+            if let Some(index) = get_top_index(elf, top) {
+                top[index] = elf;
+            }
+        }
+        let total: usize = top.into_iter().sum();
+        total.to_string()
     }
+}
+
+fn get_top_index(new: usize, top: [usize; 3]) -> Option<usize> {
+    for index in 0..3 {
+        if new > top[index] {
+            return Some(index);
+        }
+    }
+    None
 }
