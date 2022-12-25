@@ -18,20 +18,23 @@ impl Day for Day01 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let elves = input.split("\n\n").map(|elf| {
-            elf.lines().fold(0, |acc, food| {
-                let food: usize = lexical::parse(food).unwrap();
-                acc + food
+        input
+            .split("\n\n")
+            .map(|elf| {
+                elf.lines().fold(0, |acc, food| {
+                    let food: usize = lexical::parse(food).unwrap();
+                    acc + food
+                })
             })
-        });
-        let mut top = [0; 3];
-        for elf in elves {
-            if let Some(index) = get_top_index(elf, top) {
-                top[index] = elf;
-            }
-        }
-        let total: usize = top.into_iter().sum();
-        total.to_string()
+            .fold([0; 3], |mut top, elf| {
+                if let Some(index) = get_top_index(elf, top) {
+                    top[index] = elf;
+                }
+                top
+            })
+            .into_iter()
+            .sum::<usize>()
+            .to_string()
     }
 }
 
