@@ -52,7 +52,7 @@ impl Day for Day10 {
         let mut x: isize = 1;
         let mut state = State::Idle;
 
-        let mut out = String::new();
+        let mut out = String::with_capacity(41 * 6);
         for _ in 0..6 {
             for col in 0..40 {
                 if x.abs_diff(col) <= 1 {
@@ -80,6 +80,6 @@ impl Day for Day10 {
 fn parse_to_iter(input: &str) -> impl Iterator<Item = Op> + '_ {
     input.lines().map(|line| match line {
         "noop" => Op::Noop,
-        _ => Op::Addx(line.split_at(5).1.parse().unwrap()),
+        _ => Op::Addx(lexical::parse(line.split_at(5).1).unwrap()),
     })
 }
