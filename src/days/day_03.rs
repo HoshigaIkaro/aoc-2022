@@ -11,7 +11,7 @@ impl Day for Day03 {
                 let same = a.chars().find(|c| b.contains(*c)).unwrap();
                 priority(same)
             })
-            .sum::<u32>()
+            .sum::<usize>()
             .to_string()
     }
 
@@ -27,12 +27,12 @@ impl Day for Day03 {
                     .unwrap();
                 priority(badge)
             })
-            .sum::<u32>()
+            .sum::<usize>()
             .to_string()
     }
 }
 
-fn priority(c: char) -> u32 {
+fn priority(c: char) -> usize {
     match c {
         'a'..='z' => c as u8 - b'a' + 1,
         'A'..='Z' => c as u8 - b'A' + 27,
