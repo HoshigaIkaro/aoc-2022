@@ -31,7 +31,7 @@ impl Day for Day05 {
 
 fn get_crates(input: &str) -> Vec<Vec<char>> {
     let (left, right) = input.rsplit_once('\n').unwrap();
-    let num_crates = right.split_whitespace().last().unwrap().parse().unwrap();
+    let num_crates = lexical::parse(right.split_whitespace().last().unwrap()).unwrap();
     let mut cmap: Vec<Vec<char>> = vec![Vec::new(); num_crates];
     for line in left.lines() {
         for (i, c) in line.chars().skip(1).step_by(4).enumerate() {
@@ -46,10 +46,10 @@ fn get_crates(input: &str) -> Vec<Vec<char>> {
 fn parse_instruction(line: &str) -> (usize, usize, usize) {
     let mut s = line.split_whitespace();
     s.next();
-    let num = s.next().unwrap().parse().unwrap();
+    let num = lexical::parse(s.next().unwrap()).unwrap();
     s.next();
-    let origin = s.next().unwrap().parse().unwrap();
+    let origin = lexical::parse(s.next().unwrap()).unwrap();
     s.next();
-    let target = s.next().unwrap().parse().unwrap();
+    let target = lexical::parse(s.next().unwrap()).unwrap();
     (num, origin, target)
 }
