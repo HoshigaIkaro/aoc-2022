@@ -7,65 +7,44 @@ impl Day for Day02 {
     fn part_1(&self, input: &str) -> String {
         input
             .lines()
-            .map(|line| {
-                let (a, b) = line.split_at(2);
-                match a {
-                    "A " => match b {
-                        "X" => 1 + 3,
-                        "Y" => 2 + 6,
-                        "Z" => 3 + 0,
-                        _ => unimplemented!(),
-                    },
-                    "B " => match b {
-                        "X" => 1 + 0,
-                        "Y" => 2 + 3,
-                        "Z" => 3 + 6,
-                        _ => unimplemented!(),
-                    },
-                    "C " => match b {
-                        "X" => 1 + 6,
-                        "Y" => 2 + 0,
-                        "Z" => 3 + 3,
-                        _ => unimplemented!(),
-                    },
-                    _ => unimplemented!(),
-                }
+            .map(|s| match s {
+                // Opponent: Rock
+                "A X" => 1 + 3,
+                "A Y" => 2 + 6,
+                "A Z" => 3 + 0,
+                // Opponent: Paper
+                "B X" => 1 + 0,
+                "B Y" => 2 + 3,
+                "B Z" => 3 + 6,
+                // Opponent: Scissors
+                "C X" => 1 + 6,
+                "C Y" => 2 + 0,
+                "C Z" => 3 + 3,
+                _ => unreachable!(),
             })
-            .sum::<u32>()
+            .sum::<usize>()
             .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
         input
             .lines()
-            .map(|line| {
-                let (a, b) = line.split_at(2);
-                match a {
-                    "A " => match b {
-                        // rock
-                        "X" => 3 + 0, // sciscors
-                        "Y" => 1 + 3, // rock
-                        "Z" => 2 + 6, // paper
-                        _ => unimplemented!(),
-                    },
-                    "B " => match b {
-                        // paper
-                        "X" => 1 + 0, // rock
-                        "Y" => 2 + 3, // paper
-                        "Z" => 3 + 6, // scissors
-                        _ => unimplemented!(),
-                    },
-                    "C " => match b {
-                        // scissors
-                        "X" => 2 + 0, // paper
-                        "Y" => 3 + 3, // scissors
-                        "Z" => 1 + 6, // rock
-                        _ => unimplemented!(),
-                    },
-                    _ => unimplemented!(),
-                }
+            .map(|s| match s {
+                // Opponent: Rock
+                "A X" => 3 + 0,
+                "A Y" => 1 + 3,
+                "A Z" => 2 + 6,
+                // Opponent: Paper
+                "B X" => 1 + 0,
+                "B Y" => 2 + 3,
+                "B Z" => 3 + 6,
+                // Opponent: Scissors
+                "C X" => 2 + 0,
+                "C Y" => 3 + 3,
+                "C Z" => 1 + 6,
+                _ => unreachable!(),
             })
-            .sum::<u32>()
+            .sum::<usize>()
             .to_string()
     }
 }
