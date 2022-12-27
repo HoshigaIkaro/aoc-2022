@@ -1,6 +1,7 @@
 use nom::{
+    bytes::complete::take_while,
     character::{self, complete::newline},
-    combinator::opt,
+    combinator::{map_res, opt},
     multi::{fold_many1, many1},
     sequence::terminated,
     IResult,
@@ -12,8 +13,10 @@ pub struct Day01;
 
 impl Day for Day01 {
     fn part_1(&self, input: &str) -> String {
-        let (_, elves) = parse_elves(input).unwrap();
-        elves.into_iter().max().unwrap().to_string()
+        fold_many1(terminated(parse_elf, opt(newline)), || 0, u32::max)(input)
+            .unwrap()
+            .1
+            .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
@@ -46,29 +49,23 @@ fn get_min_index(top: [u32; 3]) -> usize {
     index
 }
 
-#[allow(dead_code)]
-fn parse_food(input: &str) -> IResult<&str, u32> {
-    terminated(character::complete::u32, opt(newline))(input)
+fn is_valid_digit(c: char) -> bool {
+    c.is_digit(10)
 }
 
-#[allow(dead_code)]
-fn parse_elf(input: &str) -> IResult<&str, u32> {
-    fold_many1(
-        terminated(character::complete::u32, opt(newline)),
-        || 0,
-        |acc, food| acc + food,
+fn parse_food(input: &str) -> IResult<&str, u32> {
+    terminated(
+        map_res(take_while(is_valid_digit), lexical::parse),
+        opt(newline),
     )(input)
 }
 
+fn parse_elf(input: &str) -> IResult<&str, u32> {
+    fold_many1(parse_food, || 0, |acc, food: u32| acc + food)(input)
+}
+
 fn parse_elves(input: &str) -> IResult<&str, Vec<u32>> {
-    many1(terminated(
-        fold_many1(
-            terminated(character::complete::u32, opt(newline)),
-            || 0,
-            |acc, food| acc + food,
-        ),
-        opt(newline),
-    ))(input)
+    many1(terminated(parse_elf, opt(newline)))(input)
 }
 
 #[cfg(test)]
