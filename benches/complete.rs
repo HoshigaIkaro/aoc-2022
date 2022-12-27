@@ -15,6 +15,12 @@ macro_rules! bench_day {
                 group.bench_with_input("part_2", &input, |b, input| {
                     b.iter(|| day.part_2(&input))
                 });
+                group.bench_with_input("combined", &input, |b, input| {
+                    b.iter(|| {
+                        day.part_1(&input);
+                        day.part_2(&input);
+                    })
+                });
                 group.finish();
             }
         }
