@@ -89,10 +89,42 @@ fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
     merged
 }
 
+/// Represents a line in the slope-intercept form.
 #[derive(Debug, PartialEq)]
 struct Line {
     slope: isize,
     y_intercept: isize,
+}
+
+/// Gets the lines between two sensors that have a single unit-sized gap inbetween.
+///
+/// The lines are separated into ones with positive and negative slopes.
+fn get_possible_lines(sensors: &[Sensor]) -> (Vec<Line>, Vec<Line>) {
+    let mut positives: Vec<Line> = Vec::new();
+    let mut negatives: Vec<Line> = Vec::new();
+    for one in sensors {
+        for two in sensors {
+            if one.dist(two.position) == one.m_dist + two.m_dist + 2 {
+                let (x_1, y_1) = one.position;
+                let (x_2, y_2) = two.position;
+
+                let delta_y = y_2 - y_1;
+                let delta_x = x_2 - x_1;
+                let slope = -delta_y.signum() * delta_x.signum();
+                let center_y_intercept = y_1 - slope * x_1;
+                let delta_y_intercept = slope.signum() * (one.m_dist + 1);
+                let y_intercept = center_y_intercept + delta_y_intercept;
+
+                let line = Line { slope, y_intercept };
+                match slope.signum() {
+                    1 => positives.push(line),
+                    -1 => negatives.push(line),
+                    _ => unreachable!(),
+                }
+            }
+        }
+    }
+    (positives, negatives)
 }
 
 pub struct Day15;
@@ -113,33 +145,7 @@ impl Day for Day15 {
 
     fn part_2(&self, input: &str) -> String {
         let sensors = parse_sensors(input);
-
-        let mut positives: Vec<Line> = Vec::new();
-        let mut negatives: Vec<Line> = Vec::new();
-        for one in &sensors {
-            for two in &sensors {
-                if one.dist(two.position) == one.m_dist + two.m_dist + 2 {
-                    // println!("{:?} {:?}", one.position, two.position);
-                    let (x_1, y_1) = one.position;
-                    let (x_2, y_2) = two.position;
-
-                    let delta_y = y_2 - y_1;
-                    let delta_x = x_2 - x_1;
-                    let slope = -delta_y.signum() * delta_x.signum();
-                    let center_y_intercept = y_1 - slope * x_1;
-                    let delta_y_intercept = slope.signum() * (one.m_dist + 1);
-                    let y_intercept = center_y_intercept + delta_y_intercept;
-
-                    let line = Line { slope, y_intercept };
-                    match slope.signum() {
-                        1 => positives.push(line),
-                        -1 => negatives.push(line),
-                        _ => unreachable!(),
-                    }
-                }
-            }
-        }
-
+        let (positives, negatives) = get_possible_lines(&sensors);
         for one in positives {
             let b_p = one.y_intercept;
             for Line {
@@ -147,21 +153,27 @@ impl Day for Day15 {
                 y_intercept: b_n,
             } in &negatives
             {
-                // let b be the y-intercept
-                // y_p = x + b_p
-                // y_n = -x + b_n
-                // y_p = y_n -> x + b_p = -x + b_n
-                // 2x = b_n - b_p -> x = (b_n - b_p) / 2
+                // Let  b mean the y-intercept
+                //     _p mean the positive-slope line
+                //     _n mean the negative-slope line
+                // Then
+                //     y_p = x + b_p
+                //     y_n = -x + b_n
+                // Finally
+                //     y_p = y_n -> x + b_p = -x + b_n
+                //     2x = b_n - b_p -> x = (b_n - b_p) / 2
                 let x = (b_n - b_p) / 2;
-
                 if !(0..=MAX_DISTANCE).contains(&x) {
+                    // x-value is not in range
                     continue;
                 }
+
                 let y = slope * x + b_n;
                 if !(0..=MAX_DISTANCE).contains(&y) {
+                    // y-value is not in range
                     continue;
                 }
-                
+
                 let point = (x, y);
                 if valid_spot(&sensors, point) {
                     let tuning = x as i64 * 4_000_000 + y as i64;
@@ -169,7 +181,7 @@ impl Day for Day15 {
                 }
             }
         }
-        todo!()
+        unreachable!()
     }
 }
 
@@ -195,6 +207,57 @@ fn parse_sensors(input: &str) -> Vec<Sensor> {
             Sensor::new(sensor, closest)
         })
         .collect()
+}
+
+/// Finds the point within the search area and returns its tuning.
+///
+/// # Panics
+/// Panics if there is no spot available for the beacon.
+///
+/// # Other Notes
+/// Not used in solution code due to slight calling overhead.
+#[allow(dead_code)]
+fn calculate_missing_beacon_tuning(
+    sensors: &[Sensor],
+    positives: &[Line],
+    negatives: &[Line],
+) -> i64 {
+    for one in positives {
+        let b_p = one.y_intercept;
+        for Line {
+            slope,
+            y_intercept: b_n,
+        } in negatives
+        {
+            // Let  b mean the y-intercept
+            //     _p mean the positive-slope line
+            //     _n mean the negative-slope line
+            // Then
+            //     y_p = x + b_p
+            //     y_n = -x + b_n
+            // Finally
+            //     y_p = y_n -> x + b_p = -x + b_n
+            //     2x = b_n - b_p -> x = (b_n - b_p) / 2
+            let x = (b_n - b_p) / 2;
+            if !(0..=MAX_DISTANCE).contains(&x) {
+                // x-value is not in range
+                continue;
+            }
+
+            let y = slope * x + b_n;
+            if !(0..=MAX_DISTANCE).contains(&y) {
+                // y-value is not in range
+                continue;
+            }
+
+            let point = (x, y);
+            if valid_spot(sensors, point) {
+                let tuning = x as i64 * 4_000_000 + y as i64;
+                return tuning;
+            }
+        }
+    }
+    unreachable!();
 }
 
 #[cfg(test)]
