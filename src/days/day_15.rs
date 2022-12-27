@@ -1,24 +1,34 @@
+use nom::{
+    bytes::complete::{tag, take_while},
+    character::complete::{newline, one_of},
+    combinator::{map, map_res, recognize},
+    multi::many1,
+    sequence::{delimited, preceded, separated_pair, terminated},
+    IResult,
+};
+
 use super::Day;
 
-const PART_ONE_ROW: isize = 2_000_000;
-const MAX_DISTANCE: isize = 4_000_000;
+const PART_ONE_ROW: i64 = 2_000_000;
+const MAX_DISTANCE: i64 = 4_000_000;
 
-type Point = (isize, isize);
+type Point = (i64, i64);
 
+#[derive(Debug, PartialEq)]
 struct Sensor {
     /// Sensor
     position: Point,
     /// Beacon
     closest: Point,
     /// Manhattan distance
-    m_dist: isize,
+    m_dist: i64,
 }
 
 #[allow(clippy::cast_sign_loss)]
 impl Sensor {
     fn new(position @ (p_x, p_y): Point, closest @ (c_x, c_y): Point) -> Self {
         let m_dist = p_x.abs_diff(c_x) + p_y.abs_diff(c_y);
-        let m_dist = m_dist as isize;
+        let m_dist = m_dist as i64;
         Self {
             position,
             closest,
@@ -27,18 +37,18 @@ impl Sensor {
     }
 
     /// Gets the manhattan distance from the sensor to the point.
-    fn dist(&self, (o_x, o_y): Point) -> isize {
+    fn dist(&self, (o_x, o_y): Point) -> i64 {
         let m_dist = self.position.0.abs_diff(o_x) + self.position.1.abs_diff(o_y);
-        m_dist as isize
+        m_dist as i64
     }
 
     /// Gets the possible horizontal interval after moving `y` units up or down.
     ///
     /// None is returned if the distance to the row is too far.
     /// The left and right bounds are inclusive.
-    fn h_interval(&self, y: isize) -> Option<(isize, isize)> {
+    fn h_interval(&self, y: i64) -> Option<(i64, i64)> {
         let sensor_y = self.position.1;
-        let delta_y = sensor_y.abs_diff(y) as isize;
+        let delta_y = sensor_y.abs_diff(y) as i64;
         if self.m_dist <= delta_y {
             return None;
         }
@@ -70,7 +80,7 @@ fn valid_spot(sensors: &[Sensor], point: Point) -> bool {
         .all(|sensor| sensor.dist(point) > sensor.m_dist)
 }
 
-fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
+fn merge_intervals(intervals: Vec<(i64, i64)>) -> Vec<(i64, i64)> {
     let mut intervals = intervals;
     intervals.sort_unstable();
 
@@ -92,8 +102,8 @@ fn merge_intervals(intervals: Vec<(isize, isize)>) -> Vec<(isize, isize)> {
 /// Represents a line in the slope-intercept form.
 #[derive(Debug, PartialEq)]
 struct Line {
-    slope: isize,
-    y_intercept: isize,
+    slope: i64,
+    y_intercept: i64,
 }
 
 /// Gets the lines between two sensors that have a single unit-sized gap inbetween.
@@ -131,20 +141,20 @@ pub struct Day15;
 
 impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
-        let sensors = parse_sensors(input);
-        let intervals: Vec<(isize, isize)> = sensors
+        let sensors = parse_all_sensors(input).unwrap().1;
+        let intervals: Vec<(i64, i64)> = sensors
             .iter()
             .filter_map(|s| s.h_interval(PART_ONE_ROW))
             .collect();
         merge_intervals(intervals)
             .into_iter()
             .map(|(left, right)| left.abs_diff(right + 1))
-            .sum::<usize>()
+            .sum::<u64>()
             .to_string()
     }
 
     fn part_2(&self, input: &str) -> String {
-        let sensors = parse_sensors(input);
+        let sensors = parse_all_sensors(input).unwrap().1;
         let (positives, negatives) = get_possible_lines(&sensors);
         for one in positives {
             let b_p = one.y_intercept;
@@ -185,6 +195,32 @@ impl Day for Day15 {
     }
 }
 
+fn parse_ordered_pair(input: &str) -> IResult<&str, (i64, i64)> {
+    separated_pair(
+        preceded(tag("x="), nom::character::complete::i64),
+        tag(", "),
+        preceded(tag("y="), nom::character::complete::i64),
+    )(input)
+}
+
+fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
+    map(
+        preceded(
+            tag("Sensor at "),
+            separated_pair(
+                parse_ordered_pair,
+                tag(": closest beacon is at "),
+                parse_ordered_pair,
+            ),
+        ),
+        |(sensor, beacon)| Sensor::new(sensor, beacon),
+    )(input)
+}
+
+fn parse_all_sensors(input: &str) -> IResult<&str, Vec<Sensor>> {
+    many1(terminated(parse_sensor, newline))(input)
+}
+
 fn parse_sensors(input: &str) -> Vec<Sensor> {
     input
         .lines()
@@ -193,13 +229,13 @@ fn parse_sensors(input: &str) -> Vec<Sensor> {
             let (sensor, closest) = line.split_once(": closest beacon is at ").unwrap();
 
             let sensor = sensor.split_once(", ").unwrap();
-            let sensor: (isize, isize) = (
+            let sensor: (i64, i64) = (
                 lexical::parse(sensor.0.strip_prefix("x=").unwrap()).unwrap(),
                 lexical::parse(sensor.1.strip_prefix("y=").unwrap()).unwrap(),
             );
 
             let closest = closest.split_once(", ").unwrap();
-            let closest: (isize, isize) = (
+            let closest: (i64, i64) = (
                 lexical::parse(closest.0.strip_prefix("x=").unwrap()).unwrap(),
                 lexical::parse(closest.1.strip_prefix("y=").unwrap()).unwrap(),
             );
@@ -297,5 +333,35 @@ mod day_15_tests {
         let intervals = vec![(0, 10), (5, 12), (5, 20)];
         let merged = merge_intervals(intervals);
         assert_eq!(merged, vec![(0, 20)]);
+    }
+
+    #[test]
+    fn sensor_parses() {
+        let input = "Sensor at x=0, y=0: closest beacon is at x=1, y=1\n";
+        let res = parse_sensor(input);
+        assert!(res.is_ok());
+        assert_eq!(
+            res.unwrap().1,
+            Sensor {
+                position: (0, 0),
+                closest: (1, 1),
+                m_dist: 2
+            }
+        );
+    }
+
+    #[test]
+    fn multiple_sensors_parses() {
+        let input = "Sensor at x=0, y=0: closest beacon is at x=1, y=1\nSensor at x=0, y=0: closest beacon is at x=-1, y=-1\n";
+        let res = parse_all_sensors(input);
+        assert!(res.is_ok());
+        assert_eq!(
+            res.unwrap().1[0],
+            Sensor {
+                position: (0, 0),
+                closest: (1, 1),
+                m_dist: 2
+            }
+        );
     }
 }
