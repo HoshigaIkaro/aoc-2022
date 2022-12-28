@@ -30,7 +30,7 @@ macro_rules! bench_day_old {
 macro_rules! bench_day {
     ($day:literal) => {
         paste! {
-            fn [<day2_ $day>](c: &mut Criterion) {
+            fn [<day_ $day>](c: &mut Criterion) {
                 paste! {
                     use aoc::days::[<day_ $day>]::*;
                     let input = load_input($day);
@@ -46,11 +46,7 @@ macro_rules! bench_day {
                         b.iter(|| part_2(&input))
                     });
                     group.bench_with_input("complete", &input, |b, input| {
-                        b.iter(|| {
-                            let parsed_input = parse_input(input);
-                            part_1(&parsed_input);
-                            part_2(&parsed_input);
-                        })
+                        b.iter(|| run(input))
                     });
                     group.finish();
                 }
@@ -83,9 +79,10 @@ fn day_16(c: &mut Criterion) {
 }
 
 bench_day!(01);
+bench_day!(02);
 
 // bench_day!(01);
-bench_day_old!(02);
+// bench_day_old!(02);
 bench_day_old!(03);
 bench_day_old!(04);
 bench_day_old!(05);
@@ -111,7 +108,7 @@ bench_day_old!(24);
 bench_day_old!(25);
 
 criterion_group!(
-    complete, day2_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08, day_09, day_10,
+    complete, day_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08, day_09, day_10,
     day_11, day_12, day_13, day_14, day_15, day_16, day_17, day_18, day_19, day_20, day_21, day_22,
     day_23, day_24, day_25
 );

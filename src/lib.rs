@@ -9,8 +9,14 @@ pub fn run_day(day: u8) {
 
     let input = load_input(day);
     let day: Box<dyn days::Day> = match day {
-        1 => Box::new(days::Day01),
-        2 => Box::new(days::Day02),
+        1 => {
+            dbg!(days::day_01::run(&input));
+            Box::new(days::Day01)
+        }
+        2 => {
+            dbg!(days::day_02::run(&input));
+            Box::new(days::Day02)
+        }
         3 => Box::new(days::Day03),
         4 => Box::new(days::Day04),
         5 => Box::new(days::Day05),

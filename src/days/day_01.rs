@@ -71,6 +71,11 @@ fn parse_elves(input: &str) -> IResult<&str, Vec<u32>> {
     many1(terminated(parse_elf, opt(newline)))(input)
 }
 
+pub fn run(input: &str) -> (u32, u32) {
+    let parsed = parse_input(input);
+    (part_1(&parsed), part_2(&parsed))
+}
+
 pub fn parse_input(input: &str) -> Vec<u32> {
     parse_elves(input).unwrap().1
 }
@@ -93,7 +98,6 @@ pub fn part_2(input: &[u32]) -> u32 {
         .into_iter()
         .sum::<u32>()
 }
-
 
 #[cfg(test)]
 mod day_01_tests {
