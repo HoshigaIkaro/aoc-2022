@@ -2,7 +2,7 @@ use nom::{
     bytes::complete::take_while,
     character::complete::newline,
     combinator::{map_res, opt},
-    multi::fold_many1,
+    multi::{fold_many1, many1},
     sequence::terminated,
     IResult,
 };
@@ -67,9 +67,33 @@ fn parse_elf(input: &str) -> IResult<&str, u32> {
     fold_many1(parse_food, || 0, |acc, food: u32| acc + food)(input)
 }
 
-// fn parse_elves(input: &str) -> IResult<&str, Vec<u32>> {
-//     nom::multi::many1(terminated(parse_elf, opt(newline)))(input)
-// }
+fn parse_elves(input: &str) -> IResult<&str, Vec<u32>> {
+    many1(terminated(parse_elf, opt(newline)))(input)
+}
+
+pub fn parse_input(input: &str) -> Vec<u32> {
+    parse_elves(input).unwrap().1
+}
+
+pub fn part_1(input: &[u32]) -> u32 {
+    *input.iter().max().unwrap()
+}
+
+pub fn part_2(input: &[u32]) -> u32 {
+    input
+        .iter()
+        .fold([0; 3], |mut top, &elf| {
+            let index = get_min_index(top);
+            let low = top.get_mut(index).unwrap();
+            if elf > *low {
+                *low = elf;
+            }
+            top
+        })
+        .into_iter()
+        .sum::<u32>()
+}
+
 
 #[cfg(test)]
 mod day_01_tests {
@@ -89,10 +113,10 @@ mod day_01_tests {
         assert_eq!(calories, 6000);
     }
 
-    // #[test]
-    // fn elves_parses() {
-    //     let input = "1000\n2000\n3000\n\n1000\n2000\n3000\n";
-    //     let (_, elves) = parse_elves(input).unwrap();
-    //     assert_eq!(elves, vec![6000, 6000]);
-    // }
+    #[test]
+    fn elves_parses() {
+        let input = "1000\n2000\n3000\n\n1000\n2000\n3000\n";
+        let (_, elves) = parse_elves(input).unwrap();
+        assert_eq!(elves, vec![6000, 6000]);
+    }
 }
