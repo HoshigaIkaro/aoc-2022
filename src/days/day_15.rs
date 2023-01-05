@@ -15,7 +15,7 @@ const MAX_DISTANCE: i64 = 4_000_000;
 type Point = (i64, i64);
 
 #[derive(Debug, PartialEq)]
-struct Sensor {
+pub struct Sensor {
     /// Sensor
     position: Point,
     /// Beacon
@@ -141,7 +141,7 @@ pub struct Day15;
 
 impl Day for Day15 {
     fn part_1(&self, input: &str) -> String {
-        let sensors = parse_all_sensors(input).unwrap().1;
+        let sensors = parse_input(input);
         let intervals: Vec<(i64, i64)> = sensors
             .iter()
             .filter_map(|s| s.h_interval(PART_ONE_ROW))
@@ -154,7 +154,7 @@ impl Day for Day15 {
     }
 
     fn part_2(&self, input: &str) -> String {
-        let sensors = parse_all_sensors(input).unwrap().1;
+        let sensors = parse_input(input);
         let (positives, negatives) = get_possible_lines(&sensors);
         for one in positives {
             let b_p = one.y_intercept;
@@ -193,56 +193,6 @@ impl Day for Day15 {
         }
         unreachable!()
     }
-}
-
-fn parse_ordered_pair(input: &str) -> IResult<&str, (i64, i64)> {
-    separated_pair(
-        preceded(tag("x="), nom::character::complete::i64),
-        tag(", "),
-        preceded(tag("y="), nom::character::complete::i64),
-    )(input)
-}
-
-fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
-    map(
-        preceded(
-            tag("Sensor at "),
-            separated_pair(
-                parse_ordered_pair,
-                tag(": closest beacon is at "),
-                parse_ordered_pair,
-            ),
-        ),
-        |(sensor, beacon)| Sensor::new(sensor, beacon),
-    )(input)
-}
-
-fn parse_all_sensors(input: &str) -> IResult<&str, Vec<Sensor>> {
-    many1(terminated(parse_sensor, newline))(input)
-}
-
-fn parse_sensors(input: &str) -> Vec<Sensor> {
-    input
-        .lines()
-        .map(|line| {
-            let line = line.strip_prefix("Sensor at ").unwrap();
-            let (sensor, closest) = line.split_once(": closest beacon is at ").unwrap();
-
-            let sensor = sensor.split_once(", ").unwrap();
-            let sensor: (i64, i64) = (
-                lexical::parse(sensor.0.strip_prefix("x=").unwrap()).unwrap(),
-                lexical::parse(sensor.1.strip_prefix("y=").unwrap()).unwrap(),
-            );
-
-            let closest = closest.split_once(", ").unwrap();
-            let closest: (i64, i64) = (
-                lexical::parse(closest.0.strip_prefix("x=").unwrap()).unwrap(),
-                lexical::parse(closest.1.strip_prefix("y=").unwrap()).unwrap(),
-            );
-
-            Sensor::new(sensor, closest)
-        })
-        .collect()
 }
 
 /// Finds the point within the search area and returns its tuning.
@@ -294,6 +244,92 @@ fn calculate_missing_beacon_tuning(
         }
     }
     unreachable!();
+}
+
+fn parse_ordered_pair(input: &str) -> IResult<&str, (i64, i64)> {
+    separated_pair(
+        preceded(tag("x="), nom::character::complete::i64),
+        tag(", "),
+        preceded(tag("y="), nom::character::complete::i64),
+    )(input)
+}
+
+fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
+    map(
+        preceded(
+            tag("Sensor at "),
+            separated_pair(
+                parse_ordered_pair,
+                tag(": closest beacon is at "),
+                parse_ordered_pair,
+            ),
+        ),
+        |(sensor, beacon)| Sensor::new(sensor, beacon),
+    )(input)
+}
+
+fn parse_all_sensors(input: &str) -> IResult<&str, Vec<Sensor>> {
+    many1(terminated(parse_sensor, newline))(input)
+}
+
+pub fn parse_input(input: &str) -> Vec<Sensor> {
+    parse_all_sensors(input).unwrap().1
+}
+
+pub fn part_1(sensors: &[Sensor]) -> u64 {
+    let intervals: Vec<(i64, i64)> = sensors
+        .iter()
+        .filter_map(|s| s.h_interval(PART_ONE_ROW))
+        .collect();
+    merge_intervals(intervals)
+        .into_iter()
+        .map(|(left, right)| left.abs_diff(right + 1))
+        .sum()
+}
+
+pub fn part_2(sensors: &[Sensor]) -> i64 {
+    let (positives, negatives) = get_possible_lines(&sensors);
+    for one in positives {
+        let b_p = one.y_intercept;
+        for Line {
+            slope,
+            y_intercept: b_n,
+        } in &negatives
+        {
+            // Let  b mean the y-intercept
+            //     _p mean the positive-slope line
+            //     _n mean the negative-slope line
+            // Then
+            //     y_p = x + b_p
+            //     y_n = -x + b_n
+            // Finally
+            //     y_p = y_n -> x + b_p = -x + b_n
+            //     2x = b_n - b_p -> x = (b_n - b_p) / 2
+            let x = (b_n - b_p) / 2;
+            if !(0..=MAX_DISTANCE).contains(&x) {
+                // x-value is not in range
+                continue;
+            }
+
+            let y = slope * x + b_n;
+            if !(0..=MAX_DISTANCE).contains(&y) {
+                // y-value is not in range
+                continue;
+            }
+
+            let point = (x, y);
+            if valid_spot(&sensors, point) {
+                let tuning = x as i64 * 4_000_000 + y as i64;
+                return tuning;
+            }
+        }
+    }
+    unreachable!()
+}
+
+pub fn run(input: &str) -> (u64, i64) {
+    let parsed = parse_input(input);
+    (part_1(&parsed), part_2(&parsed))
 }
 
 #[cfg(test)]
