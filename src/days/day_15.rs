@@ -2,7 +2,7 @@ use nom::{
     bytes::complete::{tag, take_while},
     character::complete::{newline, one_of},
     combinator::{map, map_res, recognize},
-    multi::many1,
+    multi::{many1, separated_list1},
     sequence::{delimited, preceded, separated_pair, terminated},
     IResult,
 };
@@ -84,7 +84,8 @@ fn merge_intervals(intervals: Vec<(i64, i64)>) -> Vec<(i64, i64)> {
     let mut intervals = intervals;
     intervals.sort_unstable();
 
-    let mut merged = vec![intervals.remove(0)];
+    let mut merged = Vec::with_capacity(intervals.len());
+    merged.push(intervals.remove(0));
     for new @ (new_left, new_right) in intervals {
         let last @ (last_left, last_right) = merged.pop().unwrap();
         // overlapping section
@@ -205,20 +206,21 @@ fn parse_ordered_pair(input: &str) -> IResult<&str, (i64, i64)> {
 
 fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
     map(
-        preceded(
+        delimited(
             tag("Sensor at "),
             separated_pair(
                 parse_ordered_pair,
                 tag(": closest beacon is at "),
                 parse_ordered_pair,
             ),
+            newline,
         ),
         |(sensor, beacon)| Sensor::new(sensor, beacon),
     )(input)
 }
 
 fn parse_all_sensors(input: &str) -> IResult<&str, Vec<Sensor>> {
-    many1(terminated(parse_sensor, newline))(input)
+    many1(parse_sensor)(input)
 }
 
 fn parse_sensors(input: &str) -> Vec<Sensor> {

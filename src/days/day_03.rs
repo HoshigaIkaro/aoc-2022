@@ -40,3 +40,36 @@ fn priority(c: char) -> usize {
     }
     .into()
 }
+
+pub fn parse_input(input: &str) -> Vec<&str> {
+    input.lines().collect()
+}
+
+pub fn part_1(input: &[&str]) -> usize {
+    input
+        .iter()
+        .map(|bag| {
+            let (a, b) = bag.split_at(bag.len() / 2);
+            let same = a.chars().find(|c| b.contains(*c)).unwrap();
+            priority(same)
+        })
+        .sum()
+}
+
+pub fn part_2(input: &[&str]) -> usize {
+    input
+        .chunks_exact(3)
+        .map(|group| {
+            let badge = group[0]
+                .chars()
+                .find(|c| group[1].contains(*c) && group[2].contains(*c))
+                .unwrap();
+            priority(badge)
+        })
+        .sum()
+}
+
+pub fn run(input: &str) -> (usize, usize) {
+    let parsed = parse_input(input);
+    (part_1(&parsed), part_2(&parsed))
+}

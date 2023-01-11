@@ -17,9 +17,18 @@ pub fn run_day(day: u8) {
             dbg!(days::day_02::run(&input));
             Box::new(days::Day02)
         }
-        3 => Box::new(days::Day03),
-        4 => Box::new(days::Day04),
-        5 => Box::new(days::Day05),
+        3 => {
+            dbg!(days::day_03::run(&input));
+            Box::new(days::Day03)
+        }
+        4 => {
+            dbg!(days::day_04::run(&input));
+            Box::new(days::Day04)
+        }
+        5 => {
+            dbg!(days::day_05::run(&input));
+            Box::new(days::Day05)
+        }
         6 => Box::new(days::Day06),
         7 => Box::new(days::Day07),
         8 => Box::new(days::Day08),
