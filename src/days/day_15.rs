@@ -196,60 +196,6 @@ impl Day for Day15 {
     }
 }
 
-<<<<<<< HEAD
-fn parse_ordered_pair(input: &str) -> IResult<&str, (i64, i64)> {
-    separated_pair(
-        preceded(tag("x="), nom::character::complete::i64),
-        tag(", "),
-        preceded(tag("y="), nom::character::complete::i64),
-    )(input)
-}
-
-fn parse_sensor(input: &str) -> IResult<&str, Sensor> {
-    map(
-        delimited(
-            tag("Sensor at "),
-            separated_pair(
-                parse_ordered_pair,
-                tag(": closest beacon is at "),
-                parse_ordered_pair,
-            ),
-            newline,
-        ),
-        |(sensor, beacon)| Sensor::new(sensor, beacon),
-    )(input)
-}
-
-fn parse_all_sensors(input: &str) -> IResult<&str, Vec<Sensor>> {
-    many1(parse_sensor)(input)
-}
-
-fn parse_sensors(input: &str) -> Vec<Sensor> {
-    input
-        .lines()
-        .map(|line| {
-            let line = line.strip_prefix("Sensor at ").unwrap();
-            let (sensor, closest) = line.split_once(": closest beacon is at ").unwrap();
-
-            let sensor = sensor.split_once(", ").unwrap();
-            let sensor: (i64, i64) = (
-                lexical::parse(sensor.0.strip_prefix("x=").unwrap()).unwrap(),
-                lexical::parse(sensor.1.strip_prefix("y=").unwrap()).unwrap(),
-            );
-
-            let closest = closest.split_once(", ").unwrap();
-            let closest: (i64, i64) = (
-                lexical::parse(closest.0.strip_prefix("x=").unwrap()).unwrap(),
-                lexical::parse(closest.1.strip_prefix("y=").unwrap()).unwrap(),
-            );
-
-            Sensor::new(sensor, closest)
-        })
-        .collect()
-}
-
-=======
->>>>>>> ed6532b6a8ea55b31856fafa2c4c0f4ccf7efb00
 /// Finds the point within the search area and returns its tuning.
 ///
 /// # Panics
