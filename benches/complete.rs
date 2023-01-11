@@ -80,9 +80,13 @@ fn day_16(c: &mut Criterion) {
 
 bench_day!(01);
 bench_day!(02);
+<<<<<<< HEAD
 bench_day!(03);
 bench_day!(04);
 bench_day!(05);
+=======
+bench_day!(15);
+>>>>>>> ed6532b6a8ea55b31856fafa2c4c0f4ccf7efb00
 
 // bench_day!(01);
 // bench_day_old!(02);
@@ -98,8 +102,8 @@ bench_day_old!(11);
 bench_day_old!(12);
 bench_day_old!(13);
 bench_day_old!(14);
-bench_day_old!(15);
-// bench_day!(16);
+// bench_day_old!(15);
+// bench_day_old!(16);
 bench_day_old!(17);
 bench_day_old!(18);
 bench_day_old!(19);
